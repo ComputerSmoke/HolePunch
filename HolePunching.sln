@@ -1,0 +1,11 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 16
+VisualStudioVersion = 16.0.0.0
+MinimumVisualStudioVersion = 16.0.0.0
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HolePunching.Windows", "HolePunching.Windows\HolePunching.Windows.csproj", "{332DAA12-66EE-498D-84B3-19509D9369EA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HolePunching", "HolePunching\HolePunching.csproj", "{F21D250D-0679-4EB9-8202-2CE1B8593142}"
+EndProject
+Global
+EndGlobal
