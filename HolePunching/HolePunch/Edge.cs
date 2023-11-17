@@ -1,17 +1,53 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Stride.Core.Mathematics;
 
 namespace HolePunching.HolePunch
 {
-    internal class Edge (Vector2 v1, Vector2 v2)
+    struct Line
     {
-        public Vector2 v1 = v1;
-        public Vector2 v2 = v2;
-        protected Vector2 segment = v2 - v1;
+        //line of form ax + by + c = 0
+        public float a,b,c;
+        public Line(Vector2 p1, Vector2 p2)
+        {
+            a = p1.Y - p2.Y;
+            b = p1.X - p2.X;
+            c = -a * p1.X - b * p1.Y;
+        }
+        //Cramer's rule. Note this breaks for parallel lines.
+        public readonly Vector2 Intersect(Line other)
+        {
+            float denominator = Det(a, b, other.a, other.b);
+            float x = -Det(c, b, other.c, other.b) / denominator;
+            float y = -Det(a, c, other.a, other.c) / denominator;
+            return new Vector2(x, y);
+        }
+        private static float Det(float a, float b, float c, float d)
+        {
+            return a * d - c * b;
+        }
+    }
+    internal class Edge 
+    {
+        public Vector2 v1;
+        public Vector2 v2;
+        //perpendicular is normal to edge, but may not have magnitude 1
+        public Vector2 Perpendicular;
+        protected Vector2 segment;
+        protected Line line;
+        static readonly float ERR = 1e-9f;
+        public Edge(Vector2 v1, Vector2 v2)
+        {
+            this.v1 = v1;
+            this.v2 = v2;
+            segment = v2 - v1;
+            Perpendicular = new Vector2(segment.Y, -segment.X);
+            line = new(v1, v2);
+        }
 
         public Edge Intersect(Edge other)
         {
@@ -19,7 +55,11 @@ namespace HolePunching.HolePunch
                 return null;
             if (Parallel(other))
                 return ParallelIntersect(other);
-            //TODO: check for intersection in non parallel case
+
+            Vector2 intersection = line.Intersect(other.line);
+            if (Vector2.Dot(intersection, segment) < Vector2.Dot(v1, segment) - ERR || Vector2.Dot(intersection, segment) > Vector2.Dot(v2, segment) + ERR)
+                return null;
+            return new Edge(intersection, intersection);
         }
         private bool InBoundingBox(Edge other)
         {
@@ -31,7 +71,7 @@ namespace HolePunching.HolePunch
                 (a1, a2) = (a2, a1);
             if (b1 > b2)
                 (b1, b2) = (b2, b1);
-            return Math.Max(a1, b1) <= Math.Min(a2, b2);
+            return Math.Max(a1, b1) <= Math.Min(a2, b2) + ERR;
         }
         private Edge ParallelIntersect(Edge other)
         {
@@ -53,7 +93,7 @@ namespace HolePunching.HolePunch
         }
         public bool IsPoint()
         {
-            return v1 == v2;
+            return segment.LengthSquared() <= ERR*ERR;
         }
     }
 }
