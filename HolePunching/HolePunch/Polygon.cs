@@ -27,6 +27,11 @@ namespace HolePunching.HolePunch
             }
             return true;
         }
+        //Return triangles whose union makes this polygon
+        public Polygon[] Partition()
+        {
+
+        }
         private static Edge[] Edges(Vector2[] vertices)
         {
             Edge[] edges = new Edge[vertices.Length];

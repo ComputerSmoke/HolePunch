@@ -135,6 +135,7 @@ namespace HolePunching.HolePunch
                 ProjectToPlane(triangle.v2, holeStart, holeNormal), 
                 ProjectToPlane(triangle.v3, holeStart, holeNormal)
             );
+
         }
         private static Vector2 ProjectToPlane(Vector3 point, Vector3 planeOrigin, Vector3 planeNormal)
         {
