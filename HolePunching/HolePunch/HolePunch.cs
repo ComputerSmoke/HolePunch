@@ -11,32 +11,18 @@ using Stride.Core.Mathematics;
 using System.Collections;
 using Stride.Particles.Updaters.FieldShapes;
 using Valve.VR;
+using NetTopologySuite.Geometries;
+using NetTopologySuite.Triangulate.Polygon;
+using NetTopologySuite.Triangulate.Tri;
 
 namespace HolePunching.HolePunch
 {
-    struct Triangle
+    struct Triangle (Vector3 v1, Vector3 v2, Vector3 v3)
     {
-        public Vector3 v1;
-        public Vector3 v2;
-        public Vector3 v3;
-        public Triangle(Vector3 v1, Vector3 v2, Vector3 v3)
-        {
-            this.v1 = v1;
-            this.v2 = v2;
-            this.v3 = v3;
-        }
-    }
-    struct Triangle2D
-    {
-        public Vector2 v1;
-        public Vector2 v2;
-        public Vector2 v3;
-        public Triangle2D(Vector2 v1, Vector2 v2, Vector2 v3)
-        {
-            this.v1 = v1;
-            this.v2 = v2;
-            this.v3 = v3;
-        }
+        public Vector3 v1 = v1;
+        public Vector3 v2 = v2;
+        public Vector3 v3 = v3;
+        public Plane plane = new(Vector3.Zero, Vector3.Cross(v3 - v1, v2 - v1));
     }
     public class HolePunch : StartupScript
     {
@@ -45,9 +31,11 @@ namespace HolePunching.HolePunch
         public override void Start()
         {
             base.Start();
+            Geometry.Init();
             model = Entity.Get<ModelComponent>().Model;
             vertices = ExtractVertices(model);
             SetModel(vertices);
+            AddHole(new Prism(new Vector3(1, 0, 0), Vector3.UnitX, .1f, 6));
         }
         private void SetModel(VertexPositionTexture[] vertices)
         {
@@ -67,8 +55,8 @@ namespace HolePunching.HolePunch
                     PrimitiveType = PrimitiveType.TriangleList,
                     DrawCount = indices.Length,
                     IndexBuffer = new IndexBufferBinding(indexBuffer, true, indices.Length),
-                    VertexBuffers = new[] { new VertexBufferBinding(vertexBuffer,
-                                  VertexPositionTexture.Layout, vertexBuffer.ElementCount) },
+                    VertexBuffers = [ new VertexBufferBinding(vertexBuffer,
+                                  VertexPositionTexture.Layout, vertexBuffer.ElementCount) ],
                 }
             };
             // add the mesh to the model
@@ -89,7 +77,7 @@ namespace HolePunching.HolePunch
         }
         private static VertexPositionTexture[] Cube()
         {
-            List<VertexPositionTexture> res = new();
+            List<VertexPositionTexture> res = [];
             var top = Face(new Vector3(-.5f, .5f, -.5f), Quaternion.Identity);
             var bottom = Face(new Vector3(-.5f, .5f, -.5f), Quaternion.RotationAxis(new Vector3(1, 0, 0), (float)Math.PI));
             res.AddRange(top);
@@ -102,7 +90,7 @@ namespace HolePunching.HolePunch
             res.AddRange(right);
             res.AddRange(front);
             res.AddRange(rear);
-            return res.ToArray();
+            return [.. res];
         }
         private static VertexPositionTexture[] Face(Vector3 pos, Quaternion rot)
         {
@@ -118,42 +106,75 @@ namespace HolePunching.HolePunch
                 rot.Rotate(ref res[i].Position);
             return res;
         }
-        public static void PunchHole(VertexPositionTexture[] vertices, Vector3 holeStart, Vector3 holeNormal, float holeRadius, int numSides) {
-            List<Triangle> intersected = new();
+        public void AddHole(Prism hole)
+        {
+            SetModel(PunchHole(vertices, hole));
+        }
+        private static VertexPositionTexture[] PunchHole(VertexPositionTexture[] vertices, Prism hole) {
+            List<Triangle> punched = [];
             for(int i = 0; i+2 < vertices.Length; i += 3)
             {
-                Triangle triangle = new Triangle(vertices[i].Position, vertices[i + 1].Position, vertices[i + 2].Position);
-                if(CylinderIntersect(triangle, holeStart, holeNormal, holeRadius))
-                    intersected.Add(triangle);
+                Triangle triangle = new(vertices[i].Position, vertices[i + 1].Position, vertices[i + 2].Position);
+                
+                Polygon triangleProj = Geometry.CreateTriangle(
+                    hole.facePlane.Project(triangle.v1), 
+                    hole.facePlane.Project(triangle.v2), 
+                    hole.facePlane.Project(triangle.v3)
+                );
+                //Shortcut if outside bounding box
+                if (DisjointBoundingBox(triangleProj, hole.radius))
+                    punched.Add(triangle);
+                else
+                    punched.AddRange(Punch(triangle.plane, triangleProj, hole));
             }
+            VertexPositionTexture[] newVertices = new VertexPositionTexture[punched.Count * 3];
+            for(int i = 0; i < punched.Count; i++)
+            {
+                newVertices[i * 3].Position = punched[i].v1;
+                newVertices[i * 3 + 1].Position = punched[i].v2;
+                newVertices[i * 3 + 2].Position = punched[i].v3;
+            }
+            return newVertices;
         }
-        private static bool CylinderIntersect(Triangle triangle, Vector3 holeStart, Vector3 holeNormal, float holeRadius)
+        private static Triangle[] Punch(Plane trianglePlane, Polygon triangleProj, Prism hole)
         {
-            //Project triangle onto plane normal to holeDirection
-            Triangle2D projectedTriangle = new(
-                ProjectToPlane(triangle.v1, holeStart, holeNormal), 
-                ProjectToPlane(triangle.v2, holeStart, holeNormal), 
-                ProjectToPlane(triangle.v3, holeStart, holeNormal)
-            );
-
+            //TODO special case: planes trianglePlane and hole face plane are orthogonal
+            Polygon cutProj = Geometry.Difference(triangleProj, hole.face);
+            var tris = new ConstrainedDelaunayTriangulator(cutProj).GetTriangles();
+            Triangle[] res = new Triangle[tris.Count];
+            int i = 0;
+            //TODO: projection needs to go back along face plane's normal, not triangle plane normal.
+            Vector3 unproject(Tri t, int idx) =>
+                trianglePlane.ToWorldSpace(
+                    trianglePlane.Project(
+                        hole.facePlane.ToWorldSpace(
+                            Geometry.CoordToVec(t.GetCoordinate(idx))
+                        )
+                    )
+                );
+            foreach (Tri t in tris)
+            {
+                res[i] = new Triangle(
+                    unproject(t, 0),
+                    unproject(t, 1),
+                    unproject(t, 2)
+                );
+                i++;
+            }
+            return res;
         }
-        private static Vector2 ProjectToPlane(Vector3 point, Vector3 planeOrigin, Vector3 planeNormal)
+        private static bool DisjointBoundingBox(Polygon polygon, float holeRadius)
         {
-            Vector3 diff = point - planeOrigin;
-            float dist = Vector3.Dot(diff, planeNormal);
-            //planePoint is nearest point on plane to point
-            Vector3 planePoint = point - dist * planeNormal;
-            //Now project onto unit plane XY vectors to get local coords. These unit vectors are arbitrary but consistent for each plane.
-            Vector3 nonparallel = planeNormal.X == 0 && planeNormal.Y == 0 ? planeNormal + Vector3.UnitX : planeNormal = Vector3.UnitZ;
-            Vector3 unitX = Vector3.Cross(planeNormal, nonparallel);
-            Vector3 unitY = Vector3.Cross(planeNormal, unitX);
-            float px = ProjDist(unitX, planePoint);
-            float py = ProjDist(unitY, planePoint);
-            return new Vector2(px, py);
-        }
-        private static float ProjDist(Vector3 u, Vector3 v)
-        {
-            return Vector3.Dot(v, u) / Vector3.Dot(u, u);
+            var coords = polygon.Coordinates;
+            double minX=0, maxX=0, minY=0, maxY=0;
+            foreach(var coord in coords)
+            {
+                minX = Math.Min(minX, coord.X);
+                maxX = Math.Max(maxX, coord.X);
+                minY = Math.Min(minY, coord.Y);
+                maxY = Math.Max(maxY, coord.Y);
+            }
+            return maxX < -holeRadius || minX > holeRadius || maxY < -holeRadius || minY > holeRadius;
         }
     }
 }
