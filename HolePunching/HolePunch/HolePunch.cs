@@ -31,7 +31,7 @@ namespace HolePunching.HolePunch
         public override void Start()
         {
             base.Start();
-            Geometry.Init();
+            GeometryHelper.Init();
             model = Entity.Get<ModelComponent>().Model;
             vertices = ExtractVertices(model);
             SetModel(vertices);
@@ -112,20 +112,10 @@ namespace HolePunching.HolePunch
         }
         private static VertexPositionTexture[] PunchHole(VertexPositionTexture[] vertices, Prism hole) {
             List<Triangle> punched = [];
-            for(int i = 0; i+2 < vertices.Length; i += 3)
+            for(int i = 0; i < vertices.Length-2; i += 3)
             {
                 Triangle triangle = new(vertices[i].Position, vertices[i + 1].Position, vertices[i + 2].Position);
-                
-                Polygon triangleProj = Geometry.CreateTriangle(
-                    hole.facePlane.Project(triangle.v1), 
-                    hole.facePlane.Project(triangle.v2), 
-                    hole.facePlane.Project(triangle.v3)
-                );
-                //Shortcut if outside bounding box
-                if (DisjointBoundingBox(triangleProj, hole.radius))
-                    punched.Add(triangle);
-                else
-                    punched.AddRange(Punch(triangle.plane, triangleProj, hole));
+                punched.AddRange(Punch(triangle, hole));
             }
             VertexPositionTexture[] newVertices = new VertexPositionTexture[punched.Count * 3];
             for(int i = 0; i < punched.Count; i++)
@@ -136,29 +126,32 @@ namespace HolePunching.HolePunch
             }
             return newVertices;
         }
-        private static Triangle[] Punch(Plane trianglePlane, Polygon triangleProj, Prism hole)
+        //Put hole in triangle, then triangularize result and return triangles
+        private static Triangle[] Punch(Triangle triangle, Prism hole)
         {
-            //TODO special case: planes trianglePlane and hole face plane are orthogonal
-            Polygon cutProj = Geometry.Difference(triangleProj, hole.face);
+            Polygon trianglePoly = GeometryHelper.CreateTriangle(
+                triangle.plane.ToPlaneSpace(triangle.v1),
+                triangle.plane.ToPlaneSpace(triangle.v2),
+                triangle.plane.ToPlaneSpace(triangle.v3)
+            );
+            Polygon holeSlice = hole.Slice(triangle.plane, trianglePoly);
+            if (holeSlice == null || !holeSlice.Envelope.Intersects(trianglePoly.Envelope))
+                return [triangle];
+
+            Polygon cutProj = GeometryHelper.Difference(trianglePoly, hole.face);
             var tris = new ConstrainedDelaunayTriangulator(cutProj).GetTriangles();
             Triangle[] res = new Triangle[tris.Count];
-            int i = 0;
-            //TODO: projection needs to go back along face plane's normal, not triangle plane normal.
-            Vector3 unproject(Tri t, int idx) =>
-                trianglePlane.ToWorldSpace(
-                    trianglePlane.Project(
-                        hole.facePlane.ToWorldSpace(
-                            Geometry.CoordToVec(t.GetCoordinate(idx))
-                        )
-                    )
+
+            Triangle TriToTriangle(Tri t) =>
+                new(
+                    triangle.plane.ToWorldSpace(GeometryHelper.CoordToVec(t.GetCoordinate(0))),
+                    triangle.plane.ToWorldSpace(GeometryHelper.CoordToVec(t.GetCoordinate(1))),
+                    triangle.plane.ToWorldSpace(GeometryHelper.CoordToVec(t.GetCoordinate(2)))
                 );
+            int i = 0;
             foreach (Tri t in tris)
             {
-                res[i] = new Triangle(
-                    unproject(t, 0),
-                    unproject(t, 1),
-                    unproject(t, 2)
-                );
+                res[i] = TriToTriangle(t);
                 i++;
             }
             return res;

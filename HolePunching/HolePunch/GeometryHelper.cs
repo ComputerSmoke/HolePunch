@@ -10,7 +10,7 @@ using NetTopologySuite.Noding;
 
 namespace HolePunching.HolePunch
 {
-    public static class Geometry
+    public static class GeometryHelper
     {
         static GeometryFactory geometryFactory;
         static bool initialized;
@@ -42,9 +42,20 @@ namespace HolePunching.HolePunch
             };
             return geometryFactory.CreatePolygon(coords);
         }
+        public static Polygon CreatePolygon(Coordinate[] coords)
+        {
+            return geometryFactory.CreatePolygon(coords);
+        }
         public static Polygon Difference(Polygon p1, Polygon p2)
         {
             return (Polygon)p1.Difference(p2);
+        }
+        public static LineString CreateLineSegment(Vector2 p1, Vector2 p2)
+        {
+            var c1 = VecToCoord(p1);
+            var c2 = VecToCoord(p2);
+            Coordinate[] coords = [c1, c2];
+            return geometryFactory.CreateLineString(coords);
         }
         public static Polygon InscribeCircle(float radius, int numSides)
         {
