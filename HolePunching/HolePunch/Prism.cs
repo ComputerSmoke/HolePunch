@@ -59,8 +59,8 @@ namespace HolePunching.HolePunch
                 if (d2 < minDist)
                     minDist = d2;
             }
-            if (minDist - maxDist <= Plane.O)
-                minDist--;
+            minDist -= .1f;
+            maxDist += .1f;
             //Vertices of resulting rectangle
             Coordinate v1 = GeometryHelper.VecToCoord(p0 + widthLineDir * minDist);
             Coordinate v2 = GeometryHelper.VecToCoord(p0 + widthLineDir * maxDist);
@@ -76,8 +76,8 @@ namespace HolePunching.HolePunch
             Vector3 intersection = facePlane.ToWorldSpace(facePlane.LineIntersect(plane.origin, facePlane.normal));
             Vector3 up = Vector3.Cross(facePlane.normal, plane.normal);
             Vector3 c0 = (Vector3.Dot(facePlane.origin - intersection, up) / Vector3.Dot(up, up)) * up + intersection;
-            Vector2 c1 = facePlane.ToPlaneSpace(c0 + up * (radius+Plane.O));
-            Vector2 c2 = facePlane.ToPlaneSpace(c0 - up * (radius+Plane.O));
+            Vector2 c1 = facePlane.ToPlaneSpace(c0 + up * (radius+10f));
+            Vector2 c2 = facePlane.ToPlaneSpace(c0 - up * (radius+10f));
             return GeometryHelper.CreateLineSegment(c1, c2);
         }
     }

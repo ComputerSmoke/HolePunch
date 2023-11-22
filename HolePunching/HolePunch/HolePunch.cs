@@ -35,9 +35,11 @@ namespace HolePunching.HolePunch
             model = Entity.Get<ModelComponent>().Model;
             vertices = ExtractVertices(model);
             SetModel(vertices);
-            AddHole(new Prism(new Vector3(2, 0, 0), Vector3.UnitX, .1f, 6));
+            AddHole(new Prism(new Vector3(2, 0, 0), Vector3.UnitX, .1f, 8));
             AddHole(new Prism(new Vector3(1, -.5f, 0), Vector3.UnitX, .1f, 6));
-            AddHole(new Prism(new Vector3(1, 0, 1), new Vector3(-1, 0, -1), .1f, 6));
+            AddHole(new Prism(new Vector3(1, 0, 1), new Vector3(-1, 0, -1), .1f, 3));
+            AddHole(new Prism(new Vector3(0, 2, 0), Vector3.UnitY, .1f, 8));
+            AddHole(new Prism(new Vector3(2, .5f, .5f), Vector3.UnitX, .1f, 8));
         }
         private void SetModel(VertexPositionTexture[] vertices)
         {
