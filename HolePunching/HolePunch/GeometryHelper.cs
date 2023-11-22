@@ -46,9 +46,9 @@ namespace HolePunching.HolePunch
         {
             return geometryFactory.CreatePolygon(coords);
         }
-        public static Polygon Difference(Polygon p1, Polygon p2)
+        public static Geometry Difference(Polygon p1, Polygon p2)
         {
-            return (Polygon)p1.Difference(p2);
+            return p1.Difference(p2);
         }
         public static LineString CreateLineSegment(Vector2 p1, Vector2 p2)
         {

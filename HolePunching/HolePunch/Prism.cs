@@ -16,7 +16,7 @@ namespace HolePunching.HolePunch
         //Get the slice of the prism with respect to provided plane, may be limited to area around provided triangle.
         public readonly Polygon Slice(Plane plane, Polygon triangle)
         {
-            if (Vector3.Dot(facePlane.normal, plane.normal) < Plane.O)
+            if (Math.Abs(Vector3.Dot(facePlane.normal, plane.normal)) <= Plane.O)
                 return ParallelSlice(plane, triangle);
             Coordinate[] sliceCoords = new Coordinate[face.Coordinates.Length];
             for (int i = 0; i < face.Coordinates.Length - 1; i++)
@@ -59,21 +59,25 @@ namespace HolePunching.HolePunch
                 if (d2 < minDist)
                     minDist = d2;
             }
+            if (minDist - maxDist <= Plane.O)
+                minDist--;
             //Vertices of resulting rectangle
             Coordinate v1 = GeometryHelper.VecToCoord(p0 + widthLineDir * minDist);
             Coordinate v2 = GeometryHelper.VecToCoord(p0 + widthLineDir * maxDist);
-            Coordinate v3 = GeometryHelper.VecToCoord(p1 + widthLineDir * minDist);
-            Coordinate v4 = GeometryHelper.VecToCoord(p1 + widthLineDir * maxDist);
+            Coordinate v3 = GeometryHelper.VecToCoord(p1 + widthLineDir * maxDist);
+            Coordinate v4 = GeometryHelper.VecToCoord(p1 + widthLineDir * minDist);
             Coordinate[] coords = [v1, v2, v3, v4, v1];
-            return GeometryHelper.CreatePolygon(coords);
+            Polygon res = GeometryHelper.CreatePolygon(coords);
+            return res;
         }
         //line on face plane that is intersection of another, perpendicular plane.
         private readonly LineString FacePlaneIntersectionPerp(Plane plane)
         {
             Vector3 intersection = facePlane.ToWorldSpace(facePlane.LineIntersect(plane.origin, facePlane.normal));
             Vector3 up = Vector3.Cross(facePlane.normal, plane.normal);
-            Vector2 c1 = facePlane.ToPlaneSpace(intersection + up * radius);
-            Vector2 c2 = facePlane.ToPlaneSpace(intersection - up * radius);
+            Vector3 c0 = (Vector3.Dot(facePlane.origin - intersection, up) / Vector3.Dot(up, up)) * up + intersection;
+            Vector2 c1 = facePlane.ToPlaneSpace(c0 + up * (radius+Plane.O));
+            Vector2 c2 = facePlane.ToPlaneSpace(c0 - up * (radius+Plane.O));
             return GeometryHelper.CreateLineSegment(c1, c2);
         }
     }
@@ -105,8 +109,8 @@ namespace HolePunching.HolePunch
         }
         public readonly Vector2 ToPlaneSpace(Vector3 point)
         {
-            float px = ProjDist(unitX, point);
-            float py = ProjDist(unitY, point);
+            float px = ProjDist(unitX, point-origin);
+            float py = ProjDist(unitY, point-origin);
             return new Vector2(px, py);
         }
         public readonly Vector3 ToWorldSpace(Vector2 planePoint)

@@ -22,7 +22,7 @@ namespace HolePunching.HolePunch
         public Vector3 v1 = v1;
         public Vector3 v2 = v2;
         public Vector3 v3 = v3;
-        public Plane plane = new(Vector3.Zero, Vector3.Cross(v3 - v1, v2 - v1));
+        public Plane plane = new(v1, Vector3.Cross(v3 - v1, v2 - v1));
     }
     public class HolePunch : StartupScript
     {
@@ -35,7 +35,9 @@ namespace HolePunching.HolePunch
             model = Entity.Get<ModelComponent>().Model;
             vertices = ExtractVertices(model);
             SetModel(vertices);
-            AddHole(new Prism(new Vector3(1, 0, 0), Vector3.UnitX, .1f, 6));
+            AddHole(new Prism(new Vector3(2, 0, 0), Vector3.UnitX, .1f, 6));
+            AddHole(new Prism(new Vector3(1, -.5f, 0), Vector3.UnitX, .1f, 6));
+            AddHole(new Prism(new Vector3(1, 0, 1), new Vector3(-1, 0, -1), .1f, 6));
         }
         private void SetModel(VertexPositionTexture[] vertices)
         {
@@ -61,17 +63,18 @@ namespace HolePunching.HolePunch
             };
             // add the mesh to the model
             model.Meshes.Add(customMesh);
+            this.vertices = vertices;
         }
         //TODO: get the vertices back from the mesh
         private VertexPositionTexture[] ExtractVertices(Model model)
         {
             (List<Vector3> verts, List<int> _) = MeshExtensions.GetMeshVerticesAndIndices(model, Game);
             var res = new VertexPositionTexture[verts.Count];
-            int i = 0;
+            int idx = 0;
             foreach(Vector3 v in verts)
             {
-                res[i].Position = v;
-                i++;
+                res[idx].Position = v;
+                idx++;
             }
             return Cube();
         }
@@ -138,7 +141,7 @@ namespace HolePunching.HolePunch
             if (holeSlice == null || !holeSlice.Envelope.Intersects(trianglePoly.Envelope))
                 return [triangle];
 
-            Polygon cutProj = GeometryHelper.Difference(trianglePoly, hole.face);
+            Geometry cutProj = GeometryHelper.Difference(trianglePoly, holeSlice);
             var tris = new ConstrainedDelaunayTriangulator(cutProj).GetTriangles();
             Triangle[] res = new Triangle[tris.Count];
 
