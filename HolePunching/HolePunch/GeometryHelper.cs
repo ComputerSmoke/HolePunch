@@ -54,6 +54,10 @@ namespace HolePunching.HolePunch
         {
             var c1 = VecToCoord(p1);
             var c2 = VecToCoord(p2);
+            return CreateLineSegment(c1, c2);
+        }
+        public static LineString CreateLineSegment(Coordinate c1, Coordinate c2)
+        {
             Coordinate[] coords = [c1, c2];
             return geometryFactory.CreateLineString(coords);
         }

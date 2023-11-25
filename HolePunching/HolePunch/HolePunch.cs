@@ -14,9 +14,24 @@ using Valve.VR;
 using NetTopologySuite.Geometries;
 using NetTopologySuite.Triangulate.Polygon;
 using NetTopologySuite.Triangulate.Tri;
+using NetTopologySuite.Noding;
 
 namespace HolePunching.HolePunch
 {
+    //Line segment intersections with faces, used to construct walls of hole
+    struct WallIntersect(Prism hole, Plane trianglePlane, Coordinate c1, Coordinate c2)
+    {
+        public Vector3 p1 = trianglePlane.ToWorldSpace(c1); 
+        public Vector3 p2 = trianglePlane.ToWorldSpace(c2); 
+        public bool forward = Vector3.Dot(trianglePlane.normal, hole.facePlane.normal) > 0;
+    }
+    struct WallIntersect2D(Plane plane, WallIntersect intersect)
+    {
+        public Vector2 p1 = plane.ToPlaneSpace(intersect.p1);
+        public Vector2 p2 = plane.ToPlaneSpace(intersect.p2);
+        public bool forward = intersect.forward;
+    }
+    //Represents a triangle in 3 space
     struct Triangle (Vector3 v1, Vector3 v2, Vector3 v3)
     {
         public Vector3 v1 = v1;
@@ -24,104 +39,30 @@ namespace HolePunching.HolePunch
         public Vector3 v3 = v3;
         public Plane plane = new(v1, Vector3.Cross(v3 - v1, v2 - v1));
     }
-    public class HolePunch : StartupScript
+    public static class HolePunch
     {
-        private Model model;
-        private VertexPositionTexture[] vertices;
-        public override void Start()
-        {
-            base.Start();
-            GeometryHelper.Init();
-            model = Entity.Get<ModelComponent>().Model;
-            vertices = ExtractVertices(model);
-            SetModel(vertices);
-            AddHole(new Prism(new Vector3(2, 0, 0), Vector3.UnitX, .1f, 8));
-            AddHole(new Prism(new Vector3(1, -.5f, 0), Vector3.UnitX, .1f, 6));
-            AddHole(new Prism(new Vector3(1, 0, 1), new Vector3(-1, 0, -1), .1f, 3));
-            AddHole(new Prism(new Vector3(0, 2, 0), Vector3.UnitY, .1f, 8));
-            AddHole(new Prism(new Vector3(2, .5f, .5f), Vector3.UnitX, .1f, 8));
-        }
-        private void SetModel(VertexPositionTexture[] vertices)
-        {
-            model.Meshes.Clear();
-            var vertexBuffer = Stride.Graphics.Buffer.Vertex.New(GraphicsDevice, vertices,
-                                                                 GraphicsResourceUsage.Dynamic);
-            int[] indices = new int[vertices.Length];
-            for (int i = 0; i < indices.Length; i++)
-                indices[i] = i;
-            var indexBuffer = Stride.Graphics.Buffer.Index.New(GraphicsDevice, indices);
-
-            var customMesh = new Mesh
-            {
-                Draw = new MeshDraw
-                {
-                    /* Vertex buffer and index buffer setup */
-                    PrimitiveType = PrimitiveType.TriangleList,
-                    DrawCount = indices.Length,
-                    IndexBuffer = new IndexBufferBinding(indexBuffer, true, indices.Length),
-                    VertexBuffers = [ new VertexBufferBinding(vertexBuffer,
-                                  VertexPositionTexture.Layout, vertexBuffer.ElementCount) ],
-                }
-            };
-            // add the mesh to the model
-            model.Meshes.Add(customMesh);
-            this.vertices = vertices;
-        }
-        //TODO: get the vertices back from the mesh
-        private VertexPositionTexture[] ExtractVertices(Model model)
-        {
-            (List<Vector3> verts, List<int> _) = MeshExtensions.GetMeshVerticesAndIndices(model, Game);
-            var res = new VertexPositionTexture[verts.Count];
-            int idx = 0;
-            foreach(Vector3 v in verts)
-            {
-                res[idx].Position = v;
-                idx++;
-            }
-            return Cube();
-        }
-        private static VertexPositionTexture[] Cube()
-        {
-            List<VertexPositionTexture> res = [];
-            var top = Face(new Vector3(-.5f, .5f, -.5f), Quaternion.Identity);
-            var bottom = Face(new Vector3(-.5f, .5f, -.5f), Quaternion.RotationAxis(new Vector3(1, 0, 0), (float)Math.PI));
-            res.AddRange(top);
-            res.AddRange(bottom);
-            var left = Face(new Vector3(-.5f, .5f, -.5f), Quaternion.RotationAxis(new Vector3(1, 0, 0), (float)Math.PI/2));
-            var right = Face(new Vector3(-.5f, .5f, -.5f), Quaternion.RotationAxis(new Vector3(1, 0, 0), -(float)Math.PI / 2));
-            var front = Face(new Vector3(-.5f, .5f, -.5f), Quaternion.RotationAxis(new Vector3(0, 0, 1), (float)Math.PI / 2));
-            var rear = Face(new Vector3(-.5f, .5f, -.5f), Quaternion.RotationAxis(new Vector3(0, 0, 1), -(float)Math.PI / 2));
-            res.AddRange(left);
-            res.AddRange(right);
-            res.AddRange(front);
-            res.AddRange(rear);
-            return [.. res];
-        }
-        private static VertexPositionTexture[] Face(Vector3 pos, Quaternion rot)
-        {
-            VertexPositionTexture[] res = new VertexPositionTexture[6];
-
-            res[0].Position = pos;
-            res[1].Position = pos + new Vector3(1, 0, 0);
-            res[2].Position = pos + new Vector3(1, 0, 1);
-            res[5].Position = pos;
-            res[4].Position = pos + new Vector3(0, 0, 1);
-            res[3].Position = pos + new Vector3(1, 0, 1);
-            for(int i = 0; i < 6; i++)
-                rot.Rotate(ref res[i].Position);
-            return res;
-        }
-        public void AddHole(Prism hole)
-        {
-            SetModel(PunchHole(vertices, hole));
-        }
-        private static VertexPositionTexture[] PunchHole(VertexPositionTexture[] vertices, Prism hole) {
+        public static VertexPositionTexture[] PunchHole(VertexPositionTexture[] vertices, Prism hole) {
             List<Triangle> punched = [];
-            for(int i = 0; i < vertices.Length-2; i += 3)
+            List<WallIntersect>[] wallIntersects = new List<WallIntersect>[hole.face.Coordinates.Length - 1];
+            Plane[] wallPlanes = new Plane[wallIntersects.Length];
+            for(int i = 0; i < hole.face.Coordinates.Length-1; i++)
+            {
+                wallIntersects[i] = [];
+                wallPlanes[i] = EdgePlane(hole.face.Coordinates[i], hole.face.Coordinates[i+1], hole.facePlane);
+            }
+            for (int i = 0; i < vertices.Length-2; i += 3)
             {
                 Triangle triangle = new(vertices[i].Position, vertices[i + 1].Position, vertices[i + 2].Position);
-                punched.AddRange(Punch(triangle, hole));
+                Polygon trianglePoly = GeometryHelper.CreateTriangle(
+                    triangle.plane.ToPlaneSpace(triangle.v1),
+                    triangle.plane.ToPlaneSpace(triangle.v2),
+                    triangle.plane.ToPlaneSpace(triangle.v3)
+                );
+                Polygon holeSlice = hole.Slice(triangle.plane, trianglePoly);
+                punched.AddRange(Punch(triangle, hole, trianglePoly, holeSlice));
+                AddWallIntersects(wallIntersects, triangle, hole, trianglePoly, holeSlice);
             }
+            List<Triangle> walls = BuildAllWalls(wallIntersects, wallPlanes);
             VertexPositionTexture[] newVertices = new VertexPositionTexture[punched.Count * 3];
             for(int i = 0; i < punched.Count; i++)
             {
@@ -131,15 +72,55 @@ namespace HolePunching.HolePunch
             }
             return newVertices;
         }
-        //Put hole in triangle, then triangularize result and return triangles
-        private static Triangle[] Punch(Triangle triangle, Prism hole)
+        private static Plane EdgePlane(Coordinate c1, Coordinate c2, Plane facePlane)
         {
-            Polygon trianglePoly = GeometryHelper.CreateTriangle(
-                triangle.plane.ToPlaneSpace(triangle.v1),
-                triangle.plane.ToPlaneSpace(triangle.v2),
-                triangle.plane.ToPlaneSpace(triangle.v3)
-            );
-            Polygon holeSlice = hole.Slice(triangle.plane, trianglePoly);
+            Vector3 p1 = facePlane.ToWorldSpace(c1);
+            Vector3 p2 = facePlane.ToWorldSpace(c2);
+            Vector3 unitX = (p2 - p1);
+            unitX.Normalize();
+            Vector3 unitY = -facePlane.normal;
+            return new Plane(p1, unitX, unitY);
+        }
+        //Returns list of triangles that make all walls of hole
+        private static List<Triangle> BuildAllWalls(List<WallIntersect>[] wallIntersects, Plane[] wallPlanes)
+        {
+            List<Triangle> res = [];
+            for (int i = 0; i < wallIntersects.Length; i++)
+                res.AddRange(BuildWalls(wallIntersects[i], wallPlanes[i]));
+            return res;
+        }
+        private static List<Triangle> BuildWalls(List<WallIntersect> wallIntersects, Plane plane)
+        {
+            if(wallIntersects.Count < 2)
+                return [];
+            WallIntersect2D[] intersects = new WallIntersect2D[wallIntersects.Count];
+            for (int i = 0; i < intersects.Length; i++)
+                intersects[i] = new(plane, wallIntersects[i]);
+
+
+        }
+        private static void AddWallIntersects(
+            List<WallIntersect>[] wallIntersects, 
+            Triangle triangle, Prism hole, Polygon trianglePoly, Polygon holeSlice)
+        {
+            //No wall intersects if triangle plane parallel to hole, or outside of bounding box
+            if (hole.IsParallel(triangle.plane) || holeSlice == null || !holeSlice.Envelope.Intersects(trianglePoly.Envelope))
+                return;
+            //Otherwise, add intersects for each edge
+            for(int i = 0; i < hole.face.Coordinates.Length-1; i++)
+            {
+                List<WallIntersect> intersectList = wallIntersects[i];
+                LineString edge = GeometryHelper.CreateLineSegment(hole.face.Coordinates[i], hole.face.Coordinates[i + 1]);
+                Geometry intersects = edge.Intersection(trianglePoly);
+                if (intersects.Coordinates.Length < 2)
+                    continue;
+                WallIntersect intersect = new(hole, triangle.plane, intersects.Coordinates[0], intersects.Coordinates[^1]);
+                intersectList.Add(intersect);
+            }
+        }
+        //Put hole in triangle, then triangularize result and return triangles
+        private static Triangle[] Punch(Triangle triangle, Prism hole, Polygon trianglePoly, Polygon holeSlice)
+        {
             if (holeSlice == null || !holeSlice.Envelope.Intersects(trianglePoly.Envelope))
                 return [triangle];
 
