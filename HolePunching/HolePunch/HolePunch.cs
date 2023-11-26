@@ -15,6 +15,7 @@ using NetTopologySuite.Geometries;
 using NetTopologySuite.Triangulate.Polygon;
 using NetTopologySuite.Triangulate.Tri;
 using NetTopologySuite.Noding;
+using BulletSharp;
 
 namespace HolePunching.HolePunch
 {
@@ -27,8 +28,7 @@ namespace HolePunching.HolePunch
     }
     struct WallIntersect2D(Plane plane, WallIntersect intersect)
     {
-        public Vector2 p1 = plane.ToPlaneSpace(intersect.p1);
-        public Vector2 p2 = plane.ToPlaneSpace(intersect.p2);
+        public LineString line = GeometryHelper.CreateLineSegment(plane.ToPlaneSpace(intersect.p1), plane.ToPlaneSpace(intersect.p2));
         public bool forward = intersect.forward;
     }
     //Represents a triangle in 3 space
@@ -59,10 +59,12 @@ namespace HolePunching.HolePunch
                     triangle.plane.ToPlaneSpace(triangle.v3)
                 );
                 Polygon holeSlice = hole.Slice(triangle.plane, trianglePoly);
-                punched.AddRange(Punch(triangle, hole, trianglePoly, holeSlice));
+                Polygon smallHoleSlice = hole.SmallSlice(triangle.plane, trianglePoly);
+                punched.AddRange(Punch(triangle, hole, trianglePoly, smallHoleSlice));
                 AddWallIntersects(wallIntersects, triangle, hole, trianglePoly, holeSlice);
             }
             List<Triangle> walls = BuildAllWalls(wallIntersects, wallPlanes);
+            punched.AddRange(walls);
             VertexPositionTexture[] newVertices = new VertexPositionTexture[punched.Count * 3];
             for(int i = 0; i < punched.Count; i++)
             {
@@ -79,6 +81,7 @@ namespace HolePunching.HolePunch
             Vector3 unitX = (p2 - p1);
             unitX.Normalize();
             Vector3 unitY = -facePlane.normal;
+            unitY.Normalize();
             return new Plane(p1, unitX, unitY);
         }
         //Returns list of triangles that make all walls of hole
@@ -89,15 +92,58 @@ namespace HolePunching.HolePunch
                 res.AddRange(BuildWalls(wallIntersects[i], wallPlanes[i]));
             return res;
         }
-        private static List<Triangle> BuildWalls(List<WallIntersect> wallIntersects, Plane plane)
+        private static Triangle[] BuildWalls(List<WallIntersect> wallIntersects, Plane plane)
         {
             if(wallIntersects.Count < 2)
                 return [];
             WallIntersect2D[] intersects = new WallIntersect2D[wallIntersects.Count];
             for (int i = 0; i < intersects.Length; i++)
                 intersects[i] = new(plane, wallIntersects[i]);
-
-
+            Array.Sort(intersects, delegate (WallIntersect2D intersect1, WallIntersect2D intersect2)
+            {
+                //Sort by which is further forward at an midpoint of one of the lines. For non intersecting, this puts line in front first.
+                LineString line1 = intersect1.line;
+                LineString line2 = intersect2.line;
+                Coordinate p1 = line1.Coordinates[0];
+                Coordinate p2 = line1.Coordinates[^1];
+                Coordinate q1 = line2.Coordinates[0];
+                Coordinate q2 = line2.Coordinates[^1];
+                double x = (q1.X + q2.X) / 2;
+                double y = (q1.Y + q2.Y) / 2;
+                double y1 = ((p2.Y - p1.Y) / (p2.X - p1.X)) * (x - p1.X) + p1.Y;
+                if (y1 < y)
+                    return -1;
+                if (y1 > y)
+                    return 1;
+                return 0;
+            });
+            double maxY = 0;
+            foreach(WallIntersect2D intersect in intersects)
+            {
+                if (intersect.line.Coordinates[0].Y > maxY)
+                    maxY = intersect.line.Coordinates[0].Y;
+                if (intersect.line.Coordinates[^1].Y > maxY)
+                    maxY = intersect.line.Coordinates[^1].Y;
+            }
+            maxY++;
+            //Now build polygon for each, take union if front edge, difference if back. Doesn't handle line intersections, if those 
+            //turn out to exist then the segments will have to be cut into more lines in the above code (but this makes it n^2 time).
+            Geometry wall = GeometryHelper.CreateEmpty();
+            foreach(WallIntersect2D intersect in intersects)
+            {
+                Coordinate b0 = new (intersect.line.Coordinates[0].X, maxY);
+                Coordinate b1 = new(intersect.line.Coordinates[^1].X, maxY);
+                Polygon shadow = GeometryHelper.CreatePolygon([
+                    intersect.line.Coordinates[0], 
+                    intersect.line.Coordinates[1], 
+                    b1, b0, intersect.line.Coordinates[0]
+                ]);
+                if (intersect.forward)
+                    wall = wall.Union(shadow);
+                else
+                    wall = wall.Difference(shadow);
+            }
+            return Triangulate(plane, wall);
         }
         private static void AddWallIntersects(
             List<WallIntersect>[] wallIntersects, 
@@ -107,10 +153,10 @@ namespace HolePunching.HolePunch
             if (hole.IsParallel(triangle.plane) || holeSlice == null || !holeSlice.Envelope.Intersects(trianglePoly.Envelope))
                 return;
             //Otherwise, add intersects for each edge
-            for(int i = 0; i < hole.face.Coordinates.Length-1; i++)
+            for(int i = 0; i < holeSlice.Coordinates.Length-1; i++)
             {
                 List<WallIntersect> intersectList = wallIntersects[i];
-                LineString edge = GeometryHelper.CreateLineSegment(hole.face.Coordinates[i], hole.face.Coordinates[i + 1]);
+                LineString edge = GeometryHelper.CreateLineSegment(holeSlice.Coordinates[i], holeSlice.Coordinates[i + 1]);
                 Geometry intersects = edge.Intersection(trianglePoly);
                 if (intersects.Coordinates.Length < 2)
                     continue;
@@ -124,15 +170,20 @@ namespace HolePunching.HolePunch
             if (holeSlice == null || !holeSlice.Envelope.Intersects(trianglePoly.Envelope))
                 return [triangle];
 
-            Geometry cutProj = GeometryHelper.Difference(trianglePoly, holeSlice);
-            var tris = new ConstrainedDelaunayTriangulator(cutProj).GetTriangles();
+            Geometry cutProj = trianglePoly.Difference(holeSlice.Difference(holeSlice.Boundary));
+            return Triangulate(triangle.plane, cutProj);
+        }
+        //Turn geometry on plane into triangles, then put back in 3-space from plane
+        private static Triangle[] Triangulate(Plane plane, Geometry geom)
+        {
+            var tris = new ConstrainedDelaunayTriangulator(geom).GetTriangles();
             Triangle[] res = new Triangle[tris.Count];
 
             Triangle TriToTriangle(Tri t) =>
-                new(
-                    triangle.plane.ToWorldSpace(GeometryHelper.CoordToVec(t.GetCoordinate(0))),
-                    triangle.plane.ToWorldSpace(GeometryHelper.CoordToVec(t.GetCoordinate(1))),
-                    triangle.plane.ToWorldSpace(GeometryHelper.CoordToVec(t.GetCoordinate(2)))
+            new(
+                    plane.ToWorldSpace(GeometryHelper.CoordToVec(t.GetCoordinate(0))),
+                    plane.ToWorldSpace(GeometryHelper.CoordToVec(t.GetCoordinate(1))),
+                    plane.ToWorldSpace(GeometryHelper.CoordToVec(t.GetCoordinate(2)))
                 );
             int i = 0;
             foreach (Tri t in tris)
@@ -141,19 +192,6 @@ namespace HolePunching.HolePunch
                 i++;
             }
             return res;
-        }
-        private static bool DisjointBoundingBox(Polygon polygon, float holeRadius)
-        {
-            var coords = polygon.Coordinates;
-            double minX=0, maxX=0, minY=0, maxY=0;
-            foreach(var coord in coords)
-            {
-                minX = Math.Min(minX, coord.X);
-                maxX = Math.Max(maxX, coord.X);
-                minY = Math.Min(minY, coord.Y);
-                maxY = Math.Max(maxY, coord.Y);
-            }
-            return maxX < -holeRadius || minX > holeRadius || maxY < -holeRadius || minY > holeRadius;
         }
     }
 }

@@ -13,8 +13,17 @@ namespace HolePunching.HolePunch
         public Plane facePlane = new(start, normal);
         public float radius = radius;
         public Polygon face = GeometryHelper.InscribeCircle(radius, numSides);
+        public Polygon smallFace = GeometryHelper.InscribeCircle(radius - 1e-3f, numSides);
         //Get the slice of the prism with respect to provided plane, may be limited to area around provided triangle.
         public Polygon Slice(Plane plane, Polygon triangle)
+        {
+            return TakeSlice(face, plane, triangle);
+        }
+        public Polygon SmallSlice(Plane plane, Polygon triangle)
+        {
+            return TakeSlice(smallFace, plane, triangle);
+        }
+        private Polygon TakeSlice(Polygon face, Plane plane, Polygon triangle)
         {
             if (IsParallel(plane))
                 return ParallelSlice(plane, triangle);

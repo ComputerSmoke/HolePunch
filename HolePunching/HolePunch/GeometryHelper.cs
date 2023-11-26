@@ -46,10 +46,6 @@ namespace HolePunching.HolePunch
         {
             return geometryFactory.CreatePolygon(coords);
         }
-        public static Geometry Difference(Polygon p1, Polygon p2)
-        {
-            return p1.Difference(p2);
-        }
         public static LineString CreateLineSegment(Vector2 p1, Vector2 p2)
         {
             var c1 = VecToCoord(p1);
@@ -81,6 +77,10 @@ namespace HolePunching.HolePunch
         public static Vector2 CoordToVec(Coordinate coord)
         {
             return new Vector2((float)coord.X, (float)coord.Y);
+        }
+        public static Geometry CreateEmpty()
+        {
+            return geometryFactory.CreateEmpty(Dimension.Unknown);
         }
     }
 }

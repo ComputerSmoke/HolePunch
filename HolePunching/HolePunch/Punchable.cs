@@ -15,11 +15,13 @@ namespace HolePunching.HolePunch
 
         private Model model;
         private VertexPositionTexture[] vertices;
+        private MaterialInstance material;
         public override void Start()
         {
             base.Start();
             GeometryHelper.Init();
             model = Entity.Get<ModelComponent>().Model;
+            material = model.Materials[0];
             vertices = ExtractVertices(model);
             SetModel(vertices);
             AddHole(new Prism(new Vector3(2, 0, 0), Vector3.UnitX, .1f, 8));
@@ -53,6 +55,7 @@ namespace HolePunching.HolePunch
             // add the mesh to the model
             model.Meshes.Add(customMesh);
             this.vertices = vertices;
+            model.Materials.Add(material);
         }
         //TODO: get the vertices back from the mesh
         private VertexPositionTexture[] ExtractVertices(Model model)

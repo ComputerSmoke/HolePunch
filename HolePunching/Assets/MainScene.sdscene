@@ -10,6 +10,7 @@ Hierarchy:
         - ref!! cb3de8b7-68f6-4c31-8c92-f892972dc63f
         - ref!! 038ecfdc-4e70-4b7c-82be-2be72b370a27
         - ref!! e19fe105-07f3-4cb6-9ef4-93f81d1e870c
+        - ref!! 51d746b1-09d4-4ab8-94e4-76f49999d74f
     Parts:
         -   Entity:
                 Id: 038ecfdc-4e70-4b7c-82be-2be72b370a27
@@ -28,6 +29,21 @@ Hierarchy:
                         Id: 0726f1fe-9bd5-4a29-b369-7217002f97ae
                         Type: !LightSkybox
                             Skybox: 93b06e4b-e788-4661-b027-acb6ea92b532:Skybox
+        -   Entity:
+                Id: 51d746b1-09d4-4ab8-94e4-76f49999d74f
+                Name: Sphere
+                Components:
+                    c32545b3f44cadfb0cc54f4c696d883c: !TransformComponent
+                        Id: 28628c7c-c681-4157-af16-a917bd0801a8
+                        Position: {X: -2.084098, Y: 0.5, Z: 1.7319369}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    8ad9b664a80ce7a4ffc4f12020b33d68: !ModelComponent
+                        Id: 9a44c2b5-1572-4d66-a42e-eaf4d4eb94bb
+                        Model: 7bcad567-5181-4317-9d44-15c03af5f87c:Sphere
+                        Materials:
+                            fc8377c48785ab704fc087e6fbada49c~0: 273d0317-0c94-41e7-9f48-fecb21a81e1d:Sphere Material
         -   Entity:
                 Id: 6335cc42-0af1-4a9a-b89b-435a2ea19702
                 Name: Camera
@@ -92,5 +108,5 @@ Hierarchy:
                         Model: 7bcad567-5181-4317-9d44-15c03af5f87c:Sphere
                         Materials:
                             fc8377c48785ab704fc087e6fbada49c~0: 273d0317-0c94-41e7-9f48-fecb21a81e1d:Sphere Material
-                    a1f9ce1caf737517252472d80f10238c: !HolePunching.HolePunch.HolePunch,HolePunching
-                        Id: 6e11ac4c-550a-4096-b085-d35fd3acc250
+                    69c53df36ba403482ea5b9b5647e78da: !HolePunching.HolePunch.Punchable,HolePunching
+                        Id: b2d6fb48-1cd0-4a71-9c52-45b2cdb3e7c0
