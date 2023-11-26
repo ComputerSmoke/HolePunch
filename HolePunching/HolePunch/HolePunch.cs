@@ -41,7 +41,7 @@ namespace HolePunching.HolePunch
     }
     public static class HolePunch
     {
-        public static VertexPositionTexture[] PunchHole(VertexPositionTexture[] vertices, Prism hole) {
+        public static VertexPositionNormalTexture[] PunchHole(VertexPositionNormalTexture[] vertices, Prism hole) {
             List<Triangle> punched = [];
             List<WallIntersect>[] wallIntersects = new List<WallIntersect>[hole.face.Coordinates.Length - 1];
             Plane[] wallPlanes = new Plane[wallIntersects.Length];
@@ -65,12 +65,15 @@ namespace HolePunching.HolePunch
             }
             List<Triangle> walls = BuildAllWalls(wallIntersects, wallPlanes);
             punched.AddRange(walls);
-            VertexPositionTexture[] newVertices = new VertexPositionTexture[punched.Count * 3];
+            VertexPositionNormalTexture[] newVertices = new VertexPositionNormalTexture[punched.Count * 3];
             for(int i = 0; i < punched.Count; i++)
             {
                 newVertices[i * 3].Position = punched[i].v1;
                 newVertices[i * 3 + 1].Position = punched[i].v2;
                 newVertices[i * 3 + 2].Position = punched[i].v3;
+                newVertices[i * 3].Normal = punched[i].plane.normal;
+                newVertices[i * 3 + 1].Normal = punched[i].plane.normal;
+                newVertices[i * 3 + 2].Normal = punched[i].plane.normal;
             }
             return newVertices;
         }
@@ -125,7 +128,6 @@ namespace HolePunching.HolePunch
                 if (intersect.line.Coordinates[^1].Y > maxY)
                     maxY = intersect.line.Coordinates[^1].Y;
             }
-            maxY++;
             //Now build polygon for each, take union if front edge, difference if back. Doesn't handle line intersections, if those 
             //turn out to exist then the segments will have to be cut into more lines in the above code (but this makes it n^2 time).
             Geometry wall = GeometryHelper.CreateEmpty();
@@ -176,6 +178,8 @@ namespace HolePunching.HolePunch
         //Turn geometry on plane into triangles, then put back in 3-space from plane
         private static Triangle[] Triangulate(Plane plane, Geometry geom)
         {
+            if (geom.IsEmpty || geom.Coordinates.Length < 3)
+                return [];
             var tris = new ConstrainedDelaunayTriangulator(geom).GetTriangles();
             Triangle[] res = new Triangle[tris.Count];
 
