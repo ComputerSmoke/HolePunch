@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using NetTopologySuite.Geometries;
 using Stride.Core.Mathematics;
 
-namespace HolePunching.HolePunch
+namespace HolePuncher
 {
     public class Prism(Vector3 start, Vector3 normal, float radius, int numSides)
     {

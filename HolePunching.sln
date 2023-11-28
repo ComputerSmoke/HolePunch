@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HolePunching.Windows", "Hol
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HolePunching", "HolePunching\HolePunching.csproj", "{F21D250D-0679-4EB9-8202-2CE1B8593142}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HolePuncher", "HolePuncher\HolePuncher.csproj", "{555020C0-CEF0-48C3-8750-B22EBAEB0024}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{F21D250D-0679-4EB9-8202-2CE1B8593142}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F21D250D-0679-4EB9-8202-2CE1B8593142}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F21D250D-0679-4EB9-8202-2CE1B8593142}.Release|Any CPU.Build.0 = Release|Any CPU
+		{555020C0-CEF0-48C3-8750-B22EBAEB0024}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{555020C0-CEF0-48C3-8750-B22EBAEB0024}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{555020C0-CEF0-48C3-8750-B22EBAEB0024}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{555020C0-CEF0-48C3-8750-B22EBAEB0024}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -8,17 +8,13 @@ using NetTopologySuite;
 using NetTopologySuite.Geometries;
 using NetTopologySuite.Noding;
 
-namespace HolePunching.HolePunch
+namespace HolePuncher
 {
     public static class GeometryHelper
     {
         static GeometryFactory geometryFactory;
-        static bool initialized;
-        public static void Init()
+        static GeometryHelper()
         {
-            if (initialized)
-                return;
-            initialized = true;
             NtsGeometryServices.Instance = new NtsGeometryServices(
                 // default CoordinateSequenceFactory
                 NetTopologySuite.Geometries.Implementation.CoordinateArraySequenceFactory.Instance,

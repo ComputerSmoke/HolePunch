@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using NetTopologySuite.Geometries;
 using Stride.Core.Mathematics;
 
-namespace HolePunching.HolePunch
+namespace HolePuncher
 {
     public struct Plane
     {

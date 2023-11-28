@@ -9,35 +9,48 @@ using System.Threading.Tasks;
 using Stride.Core.Mathematics;
 using Stride.Rendering.Materials.ComputeColors;
 using Stride.Rendering.Materials;
+using Valve.VR;
 
-namespace HolePunching.HolePunch
+namespace HolePuncher
 {
-    public class Punchable : StartupScript
+    public class Punchable : SyncScript
     {
 
-        private Model model;
+        private ModelComponent modelComponent;
         private VertexPositionNormalTexture[] vertices;
         private Material material;
+        bool aaa;
         public override void Start()
         {
             base.Start();
-            GeometryHelper.Init();
-            model = Entity.Get<ModelComponent>().Model;
-            vertices = ExtractVertices(model);
-            model = new();
-            Entity.Get<ModelComponent>().Model = model;
+            modelComponent = Entity.Get<ModelComponent>();
+            vertices = ExtractVertices(modelComponent.Model);
+            modelComponent.Model = new();
             material = Content.Load<Material>("Sphere Material");
             SetModel(vertices);
-            AddHole(new Prism(new Vector3(2, 0, 0), Vector3.UnitX, .1f, 8));
+            /*AddHole(new Prism(new Vector3(2, 0, 0), Vector3.UnitX, .1f, 8));
             AddHole(new Prism(new Vector3(1, -.5f, 0), Vector3.UnitX, .1f, 6));
             AddHole(new Prism(new Vector3(1, 0, 1), new Vector3(-1, 0, -1), .1f, 3));
             AddHole(new Prism(new Vector3(0, 2, 0), Vector3.UnitY, .1f, 8));
-            AddHole(new Prism(new Vector3(2, .5f, .5f), Vector3.UnitX, .1f, 8));
+            AddHole(new Prism(new Vector3(2, .5f, .5f), Vector3.UnitX, .1f, 8));*/
+        }
+        public override void Update()
+        {
+            if (aaa)
+                return;
+            aaa = true;
+            Delay();
+        }
+        private async void Delay()
+        {
+            await Task.Delay(1000);
+            AddHole(new Prism(new Vector3(2, 0, 0), Vector3.UnitX, .1f, 8));
         }
         private void SetModel(VertexPositionNormalTexture[] vertices)
         {
-            model.Meshes.Clear();
-            model.Materials.Clear();
+            modelComponent.Model = new();
+            modelComponent.Model.Meshes.Clear();
+            modelComponent.Model.Materials.Clear();
             var vertexBuffer = Stride.Graphics.Buffer.Vertex.New(GraphicsDevice, vertices,
                                                                  GraphicsResourceUsage.Dynamic);
             int[] indices = new int[vertices.Length];
@@ -59,21 +72,13 @@ namespace HolePunching.HolePunch
             };
             customMesh.MaterialIndex = 0;
             // add the mesh to the model
-            model.Meshes.Add(customMesh);
+            modelComponent.Model.Meshes.Add(customMesh);
             this.vertices = vertices;
-            model.Materials.Add(material);
+            modelComponent.Model.Materials.Add(material);
         }
         //TODO: get the vertices back from the mesh
         private VertexPositionNormalTexture[] ExtractVertices(Model model)
         {
-            (List<Vector3> verts, List<int> _) = MeshExtensions.GetMeshVerticesAndIndices(model, Game);
-            var res = new VertexPositionNormalTexture[verts.Count];
-            int idx = 0;
-            foreach (Vector3 v in verts)
-            {
-                res[idx].Position = v;
-                idx++;
-            }
             return Cube();
         }
         private static VertexPositionNormalTexture[] Cube()
@@ -121,6 +126,16 @@ namespace HolePunching.HolePunch
                 res[i].TextureCoordinate = new Vector2(.5f, .5f);
             }
             SetModel(res);
+        }
+        public void AddHoleFromWorld(Vector3 pos, Vector3 dir, float radius)
+        {
+            dir.Normalize();
+            Entity.Transform.GetWorldTransformation(out Vector3 worldPos, out Quaternion rot, out _);
+            rot.Rotate(ref dir);
+            pos -= worldPos;
+            pos -= dir * .1f;
+            Prism hole = new(pos, -dir, radius, 6);
+            AddHole(hole);
         }
     }
 }
