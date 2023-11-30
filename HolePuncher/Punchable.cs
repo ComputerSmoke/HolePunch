@@ -10,16 +10,16 @@ using Stride.Core.Mathematics;
 using Stride.Rendering.Materials.ComputeColors;
 using Stride.Rendering.Materials;
 using Valve.VR;
+using HolePuncher.Volumes;
 
 namespace HolePuncher
 {
-    public class Punchable : SyncScript
+    public class Punchable : StartupScript
     {
 
         private ModelComponent modelComponent;
         private VertexPositionNormalTexture[] vertices;
         private Material material;
-        bool aaa;
         public override void Start()
         {
             base.Start();
@@ -33,18 +33,6 @@ namespace HolePuncher
             AddHole(new Prism(new Vector3(1, 0, 1), new Vector3(-1, 0, -1), .1f, 3));
             AddHole(new Prism(new Vector3(0, 2, 0), Vector3.UnitY, .1f, 8));
             AddHole(new Prism(new Vector3(2, .5f, .5f), Vector3.UnitX, .1f, 8));*/
-        }
-        public override void Update()
-        {
-            if (aaa)
-                return;
-            aaa = true;
-            Delay();
-        }
-        private async void Delay()
-        {
-            await Task.Delay(1000);
-            AddHole(new Prism(new Vector3(2, 0, 0), Vector3.UnitX, .1f, 8));
         }
         private void SetModel(VertexPositionNormalTexture[] vertices)
         {
@@ -125,10 +113,12 @@ namespace HolePuncher
             {
                 res[i].TextureCoordinate = new Vector2(.5f, .5f);
             }
-            SetModel(res);
+            vertices = res;
+            //SetModel(res);
         }
         public void AddHoleFromWorld(Vector3 pos, Vector3 dir, float radius)
         {
+           // int x = Fib(10);
             dir.Normalize();
             Entity.Transform.GetWorldTransformation(out Vector3 worldPos, out Quaternion rot, out _);
             rot.Rotate(ref dir);
@@ -136,6 +126,14 @@ namespace HolePuncher
             pos -= dir * .1f;
             Prism hole = new(pos, -dir, radius, 6);
             AddHole(hole);
+        }
+        private int Fib(int n)
+        {
+            if (n == 0)
+                return 1;
+            if (n == 1)
+                return 1;
+            return Fib(n - 1) + Fib(n - 2);
         }
     }
 }

@@ -14,6 +14,8 @@ using NetTopologySuite.Geometries;
 using NetTopologySuite.Triangulate.Polygon;
 using NetTopologySuite.Triangulate.Tri;
 using NetTopologySuite.Noding;
+using HolePuncher.Volumes;
+using Plane = HolePuncher.Volumes.Plane;
 
 namespace HolePuncher
 {
@@ -36,11 +38,16 @@ namespace HolePuncher
         public Vector3 v2 = v2;
         public Vector3 v3 = v3;
         public Plane plane = new(v1, Vector3.Cross(v3 - v1, v2 - v1));
+        public readonly BoundingBox3D BoundingBox3D()
+        {
+            return new BoundingBox3D([v1, v2, v3]);
+        }
     }
     public static class HolePunch
     {
         public static VertexPositionNormalTexture[] PunchHole(VertexPositionNormalTexture[] vertices, Prism hole)
         {
+            Prism smallHole = new Prism(hole.facePlane.origin, hole.facePlane.normal, hole.radius - 1e-4f, hole.numSides);
             List<Triangle> punched = [];
             List<WallIntersect>[] wallIntersects = new List<WallIntersect>[hole.face.Coordinates.Length - 1];
             Plane[] wallPlanes = new Plane[wallIntersects.Length];
@@ -57,8 +64,8 @@ namespace HolePuncher
                     triangle.plane.ToPlaneSpace(triangle.v2),
                     triangle.plane.ToPlaneSpace(triangle.v3)
                 );
-                Polygon holeSlice = hole.Slice(triangle.plane, trianglePoly);
-                Polygon smallHoleSlice = hole.SmallSlice(triangle.plane, trianglePoly);
+                Geometry holeSlice = hole.Slice(triangle.plane, trianglePoly);
+                Geometry smallHoleSlice = smallHole.Slice(triangle.plane, trianglePoly);
                 punched.AddRange(Punch(triangle, hole, trianglePoly, smallHoleSlice));
                 AddWallIntersects(wallIntersects, triangle, hole, trianglePoly, holeSlice);
             }
@@ -127,6 +134,7 @@ namespace HolePuncher
                     b0,
                     intersect.line.Coordinates[0]
                 ]);
+
                 try
                 {
                     if (intersect.forward)
@@ -166,7 +174,7 @@ namespace HolePuncher
         }
         private static void AddWallIntersects(
             List<WallIntersect>[] wallIntersects,
-            Triangle triangle, Prism hole, Polygon trianglePoly, Polygon holeSlice)
+            Triangle triangle, Prism hole, Geometry trianglePoly, Geometry holeSlice)
         {
             //No wall intersects if triangle plane parallel to hole, or outside of bounding box
             if (hole.IsParallel(triangle.plane) || holeSlice == null || !holeSlice.Envelope.Intersects(trianglePoly.Envelope))
@@ -184,7 +192,7 @@ namespace HolePuncher
             }
         }
         //Put hole in triangle, then triangularize result and return triangles
-        private static Triangle[] Punch(Triangle triangle, Prism hole, Polygon trianglePoly, Polygon holeSlice)
+        private static Triangle[] Punch(Triangle triangle, Prism hole, Geometry trianglePoly, Geometry holeSlice)
         {
             if (holeSlice == null || !holeSlice.Envelope.Intersects(trianglePoly.Envelope))
                 return [triangle];
@@ -197,22 +205,28 @@ namespace HolePuncher
         {
             if (geom.IsEmpty || geom.Coordinates.Length < 3)
                 return [];
-            var tris = new ConstrainedDelaunayTriangulator(geom).GetTriangles();
-            Triangle[] res = new Triangle[tris.Count];
-
-            Triangle TriToTriangle(Tri t) =>
-            new(
-                    plane.ToWorldSpace(GeometryHelper.CoordToVec(t.GetCoordinate(0))),
-                    plane.ToWorldSpace(GeometryHelper.CoordToVec(t.GetCoordinate(1))),
-                    plane.ToWorldSpace(GeometryHelper.CoordToVec(t.GetCoordinate(2)))
-                );
-            int i = 0;
-            foreach (Tri t in tris)
+            try
             {
-                res[i] = TriToTriangle(t);
-                i++;
+                var tris = new ConstrainedDelaunayTriangulator(geom).GetTriangles();
+                Triangle[] res = new Triangle[tris.Count];
+
+                Triangle TriToTriangle(Tri t) =>
+                new(
+                        plane.ToWorldSpace(GeometryHelper.CoordToVec(t.GetCoordinate(0))),
+                        plane.ToWorldSpace(GeometryHelper.CoordToVec(t.GetCoordinate(1))),
+                        plane.ToWorldSpace(GeometryHelper.CoordToVec(t.GetCoordinate(2)))
+                    );
+                int i = 0;
+                foreach (Tri t in tris)
+                {
+                    res[i] = TriToTriangle(t);
+                    i++;
+                }
+                return res;
+            } catch
+            {
+                return [];
             }
-            return res;
         }
     }
 }

@@ -12,7 +12,7 @@ namespace HolePuncher
 {
     public static class GeometryHelper
     {
-        static GeometryFactory geometryFactory;
+        public static GeometryFactory GeometryFactory { get; }
         static GeometryHelper()
         {
             NtsGeometryServices.Instance = new NtsGeometryServices(
@@ -27,7 +27,7 @@ namespace HolePuncher
                 // Coordinate equality comparer to use (CoordinateEqualityComparer or PerOrdinateEqualityComparer)
                 new CoordinateEqualityComparer()
             );
-            geometryFactory = NtsGeometryServices.Instance.CreateGeometryFactory();
+            GeometryFactory = NtsGeometryServices.Instance.CreateGeometryFactory();
         }
         public static Polygon CreateTriangle(Vector2 p1, Vector2 p2, Vector2 p3)
         {
@@ -36,11 +36,11 @@ namespace HolePuncher
             {
                 c1, VecToCoord(p2), VecToCoord(p3), c1
             };
-            return geometryFactory.CreatePolygon(coords);
+            return GeometryFactory.CreatePolygon(coords);
         }
         public static Polygon CreatePolygon(Coordinate[] coords)
         {
-            return geometryFactory.CreatePolygon(coords);
+            return GeometryFactory.CreatePolygon(coords);
         }
         public static LineString CreateLineSegment(Vector2 p1, Vector2 p2)
         {
@@ -51,7 +51,7 @@ namespace HolePuncher
         public static LineString CreateLineSegment(Coordinate c1, Coordinate c2)
         {
             Coordinate[] coords = [c1, c2];
-            return geometryFactory.CreateLineString(coords);
+            return GeometryFactory.CreateLineString(coords);
         }
         public static Polygon InscribeCircle(float radius, int numSides)
         {
@@ -64,7 +64,7 @@ namespace HolePuncher
                 );
             }
             coords[numSides] = coords[0];
-            return geometryFactory.CreatePolygon(coords);
+            return GeometryFactory.CreatePolygon(coords);
         }
         public static Coordinate VecToCoord(Vector2 v)
         {
@@ -76,7 +76,7 @@ namespace HolePuncher
         }
         public static Geometry CreateEmpty()
         {
-            return geometryFactory.CreateEmpty(Dimension.Unknown);
+            return GeometryFactory.CreateEmpty(Dimension.Unknown);
         }
     }
 }

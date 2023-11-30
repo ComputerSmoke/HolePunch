@@ -16,10 +16,14 @@ namespace HolePunching
     {
         public CameraComponent Camera { get; set; }
         private ModelComponent model;
+        private Queue<(Punchable, Vector3, Vector3, float)> punchQueue;
+        private bool queueLocked;
         public override void Start()
         {
             base.Start();
             model = Entity.Get<ModelComponent>();
+            punchQueue = new();
+            EvalQueue();
         }
         public override void Update()
         {
@@ -36,7 +40,19 @@ namespace HolePunching
             var enumerator = punchables.GetEnumerator();
             enumerator.MoveNext();
             Punchable punchable = enumerator.Current;
-            Task.Run(() => punchable.AddHoleFromWorld(res.Point, dir, .1f));
+            punchQueue.Enqueue((punchable, res.Point, dir, .1f));
+        }
+        private async void EvalQueue()
+        {
+            for(; ; )
+            {
+                await Task.Delay(100);
+                while (punchQueue.Count > 0)
+                {
+                    var (punchable, pos, dir, r) = punchQueue.Dequeue();
+                    await Task.Run(() => punchable.AddHoleFromWorld(pos, dir, r));
+                }
+            }
         }
         public static (HitResult,Vector3) ScreenPositionToWorldPositionRaycast(Vector2 screenPos, CameraComponent camera, Simulation simulation)
         {

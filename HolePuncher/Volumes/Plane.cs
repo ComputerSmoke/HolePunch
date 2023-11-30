@@ -4,16 +4,23 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using NetTopologySuite.Geometries;
+using NetTopologySuite.Utilities;
+using Silk.NET.OpenXR;
 using Stride.Core.Mathematics;
 
-namespace HolePuncher
+namespace HolePuncher.Volumes
 {
-    public struct Plane
+    public struct Line (Vector2 point, Vector2 dir)
+    {
+        public Vector2 point = point;
+        public Vector2 dir = dir;
+    }
+    public class Plane
     {
         public Vector3 origin;
         public Vector3 normal, unitX, unitY;
         //bootleg zero
-        public const float O = 1e-9f;
+        public const float O = 1e-6f;
         public Plane(Vector3 origin, Vector3 normal)
         {
             this.origin = origin;
@@ -33,7 +40,7 @@ namespace HolePuncher
             normal = Vector3.Cross(this.unitX, this.unitY);
         }
 
-        public readonly Vector2 Project(Vector3 point)
+        public Vector2 Project(Vector3 point)
         {
             Vector3 diff = point - origin;
             float dist = Vector3.Dot(diff, normal);
@@ -42,17 +49,17 @@ namespace HolePuncher
             //Now project onto unit plane XY vectors to get local coords. These unit vectors are arbitrary but consistent for each plane.
             return ToPlaneSpace(planePoint);
         }
-        public readonly Vector2 ToPlaneSpace(Vector3 point)
+        public Vector2 ToPlaneSpace(Vector3 point)
         {
             float px = ProjDist(unitX, point - origin);
             float py = ProjDist(unitY, point - origin);
             return new Vector2(px, py);
         }
-        public readonly Vector3 ToWorldSpace(Vector2 planePoint)
+        public Vector3 ToWorldSpace(Vector2 planePoint)
         {
             return origin + planePoint.X * unitX + planePoint.Y * unitY;
         }
-        public readonly Vector3 ToWorldSpace(Coordinate planePoint)
+        public Vector3 ToWorldSpace(Coordinate planePoint)
         {
             return ToWorldSpace(GeometryHelper.CoordToVec(planePoint));
         }
@@ -61,15 +68,25 @@ namespace HolePuncher
             return Vector3.Dot(v, u) / Vector3.Dot(u, u);
         }
         //Find point at which line intersects plane. Throws exception if line is parallel to plane.
-        public readonly Vector2 LineIntersect(Vector3 lineStart, Vector3 lineDir)
+        public Vector2 LineIntersect(Vector3 lineStart, Vector3 lineDir)
         {
             var dot = Vector3.Dot(normal, lineDir);
             if (Math.Abs(dot) <= O)
-                throw new Exception("No point intersection, line is parallel to plane.");
+                throw new NoIntersectException("Line parallel to plane");
             var w = lineStart - origin;
-            var dist = -(Vector3.Dot(normal, w)) / dot;
-            Vector3 planePoint = lineStart + (lineDir * dist);
+            var dist = -Vector3.Dot(normal, w) / dot;
+            Vector3 planePoint = lineStart + lineDir * dist;
             return ToPlaneSpace(planePoint);
+        }
+        //Line representing intersection of another plane. 
+        public Line Intersection(Plane plane)
+        {
+            if (Math.Abs(Vector3.Dot(normal, plane.normal)) <= O)
+                throw new NoIntersectException("Planes are parallel");
+            Vector3 dir = Vector3.Cross(normal, plane.normal);
+            Vector3 perpDir = Vector3.Cross(dir, normal);
+            Vector3 intersection = ToWorldSpace(LineIntersect(plane.origin, perpDir));
+            return new Line(ToPlaneSpace(intersection), ToPlaneSpace(dir));
         }
     }
 }
