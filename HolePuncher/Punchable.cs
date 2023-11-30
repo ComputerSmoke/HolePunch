@@ -61,7 +61,7 @@ namespace HolePuncher
             customMesh.MaterialIndex = 0;
             // add the mesh to the model
             modelComponent.Model.Meshes.Add(customMesh);
-            this.vertices = vertices;
+            //this.vertices = vertices;
             modelComponent.Model.Materials.Add(material);
         }
         //TODO: get the vertices back from the mesh
@@ -109,12 +109,14 @@ namespace HolePuncher
         public void AddHole(Prism hole)
         {
             VertexPositionNormalTexture[] res = HolePunch.PunchHole(vertices, hole);
-            for(int i = 0; i < res.Length; i++)
-            {
-                res[i].TextureCoordinate = new Vector2(.5f, .5f);
-            }
             vertices = res;
-            //SetModel(res);
+            SetModel(res);
+        }
+        public void AddHole(Volume hole)
+        {
+            VertexPositionNormalTexture[] res = HolePunch.PunchHole(vertices, hole);
+            vertices = res;
+            SetModel(res);
         }
         public void AddHoleFromWorld(Vector3 pos, Vector3 dir, float radius)
         {
@@ -125,6 +127,13 @@ namespace HolePuncher
             pos -= worldPos;
             pos -= dir * .1f;
             Prism hole = new(pos, -dir, radius, 6);
+            AddHole(hole);
+        }
+        public void AddChipFromWorld(Vector3 pos, Vector3 dir, float width, float depth)
+        {
+            //Pyramid hole = new(pos, width, depth);
+            Cube hole = new(pos, width);
+            //TODO: rotate hole towards dir
             AddHole(hole);
         }
         private int Fib(int n)

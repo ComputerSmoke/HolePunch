@@ -8,9 +8,9 @@ using NetTopologySuite.Utilities;
 using Silk.NET.OpenXR;
 using Stride.Core.Mathematics;
 
-namespace HolePuncher.Volumes
+namespace HolePuncher.Volumes.Faces
 {
-    public struct Line (Vector2 point, Vector2 dir)
+    public struct Line(Vector2 point, Vector2 dir)
     {
         public Vector2 point = point;
         public Vector2 dir = dir;
@@ -25,7 +25,7 @@ namespace HolePuncher.Volumes
         {
             this.origin = origin;
             this.normal = normal;
-            normal.Normalize();
+            this.normal.Normalize();
             Vector3 nonparallel = normal.X == 0 && normal.Y == 0 ? normal + Vector3.UnitX : normal + Vector3.UnitZ;
             unitX = Vector3.Cross(normal, nonparallel);
             unitY = Vector3.Cross(normal, unitX);
@@ -38,8 +38,16 @@ namespace HolePuncher.Volumes
             this.unitX = unitX;
             this.unitY = unitY;
             normal = Vector3.Cross(this.unitX, this.unitY);
+            normal.Normalize();
         }
-
+        //Rotate plane by rot around source
+        public void RotateAround(Vector3 target, Vector3 axis, float angle)
+        {
+            Vector3.RotateAround(origin, target, axis, angle);
+            Vector3.RotateAround(normal, Vector3.Zero, axis, angle);
+            Vector3.RotateAround(unitX, Vector3.Zero, axis, angle);
+            Vector3.RotateAround(unitY, Vector3.Zero, axis, angle);
+        }
         public Vector2 Project(Vector3 point)
         {
             Vector3 diff = point - origin;
@@ -70,21 +78,29 @@ namespace HolePuncher.Volumes
         //Find point at which line intersects plane. Throws exception if line is parallel to plane.
         public Vector2 LineIntersect(Vector3 lineStart, Vector3 lineDir)
         {
-            var dot = Vector3.Dot(normal, lineDir);
-            if (Math.Abs(dot) <= O)
+            if (Parallel(lineDir))
                 throw new NoIntersectException("Line parallel to plane");
+            var dot = Vector3.Dot(normal, lineDir);
             var w = lineStart - origin;
             var dist = -Vector3.Dot(normal, w) / dot;
             Vector3 planePoint = lineStart + lineDir * dist;
             return ToPlaneSpace(planePoint);
         }
+        public bool Parallel(Plane other)
+        {
+            return Math.Abs(Vector3.Dot(normal, normal - other.normal)) <= O;
+        }
+        public bool Parallel(Vector3 lineDir)
+        {
+            return Math.Abs(Vector3.Dot(normal, lineDir)) <= O;
+        }
         //Line representing intersection of another plane. 
         public Line Intersection(Plane plane)
         {
-            if (Math.Abs(Vector3.Dot(normal, plane.normal)) <= O)
+            if (Parallel(plane))
                 throw new NoIntersectException("Planes are parallel");
             Vector3 dir = Vector3.Cross(normal, plane.normal);
-            Vector3 perpDir = Vector3.Cross(dir, normal);
+            Vector3 perpDir = Vector3.Cross(dir, plane.normal);
             Vector3 intersection = ToWorldSpace(LineIntersect(plane.origin, perpDir));
             return new Line(ToPlaneSpace(intersection), ToPlaneSpace(dir));
         }

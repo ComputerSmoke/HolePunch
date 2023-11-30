@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using HolePuncher.Volumes.Faces;
 using NetTopologySuite.Geometries;
 using Stride.Core.Mathematics;
+using Plane = HolePuncher.Volumes.Faces.Plane;
 
 namespace HolePuncher.Volumes
 {
@@ -14,7 +16,6 @@ namespace HolePuncher.Volumes
         public float radius = radius;
         public int numSides = numSides;
         public Polygon face = GeometryHelper.InscribeCircle(radius, numSides);
-        public Polygon smallFace = GeometryHelper.InscribeCircle(radius - 1e-3f, numSides);
         public BoundingBox3D BoundingBox { get; set; } = new BoundingBox3D([new Vector3(-1e12f, -1e12f, -1e12f), new Vector3(1e12f, 1e12f, 1e12f)]);
         public Geometry Slice(Plane plane)
         {

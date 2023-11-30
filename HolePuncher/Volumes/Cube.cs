@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using HolePuncher.Volumes.Faces;
 using NetTopologySuite.Geometries;
 using Stride.Core.Mathematics;
+using Plane = HolePuncher.Volumes.Faces.Plane;
 
 namespace HolePuncher.Volumes
 {

@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using Stride.Core.Mathematics;
 using NetTopologySuite.Geometries;
 using NetTopologySuite.Operation.Polygonize;
+using HolePuncher.Volumes.Faces;
+using Plane = HolePuncher.Volumes.Faces.Plane;
 
 namespace HolePuncher.Volumes
 {
@@ -28,26 +30,50 @@ namespace HolePuncher.Volumes
             return min.X <= other.max.X && min.Y <= other.max.Y && min.Z <= other.max.Z
                 && max.X >= other.min.X && max.Y >= other.min.Y && max.Z >= other.min.Z;
         }
+        public readonly BoundingBox3D RotateAround(Vector3 target, Vector3 axis, float angle)
+        {
+            Vector3[] vertices = [
+                min,
+                new Vector3(min.X, min.Y, max.Z),
+                new Vector3(min.X, max.Z, min.Z),
+                new Vector3(max.X, min.Y, min.Z),
+                new Vector3(min.X, max.Y, max.Z),
+                new Vector3(max.X, min.Y, max.Z),
+                new Vector3(max.X, max.Y, min.Z),
+                max
+            ];
+            for(int i = 0; i < vertices.Length; i++)
+                Vector3.RotateAround(in vertices[i], target, axis, angle);
+            return new BoundingBox3D(vertices);
+        }
     }
     //Represents a convex 3d shape
-    internal class Volume(Face[] faces, BoundingBox3D BoundingBox) : IVolume
+    public class Volume(Face[] faces, BoundingBox3D boundingBox) : IVolume
     {
-        readonly Face[] faces = faces;
-        public BoundingBox3D BoundingBox { get; set; } = BoundingBox;
+        public Face[] Faces { get; } = faces;
+        public BoundingBox3D BoundingBox { get; set; } = boundingBox;
         //Take slice of this volume
         public Geometry Slice(Plane slicer)
         {
             Polygonizer polygonizer = new(true);
-            for(int i = 0; i < faces.Length; i++)
+            for(int i = 0; i < Faces.Length; i++)
             {
-                Face face = faces[i];
-                polygonizer.Add(face.Slice(slicer));
+                Face face = Faces[i];
+                Geometry faceSlice = face.Slice(slicer);
+                polygonizer.Add(faceSlice);
             }
             return polygonizer.GetGeometry();
         }
         public Geometry Slice(Plane slicer, Geometry interestArea)
         {
             return Slice(slicer);
+        }
+        //Rotate volume around a point
+        public void RotateAround(Vector3 target, Vector3 axis, float angle)
+        {
+            foreach (Face face in Faces)
+                face.plane.RotateAround(target, axis, angle);
+            BoundingBox = BoundingBox.RotateAround(target, axis, angle);
         }
     }
 }

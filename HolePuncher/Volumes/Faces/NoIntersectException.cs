@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HolePuncher.Volumes
+namespace HolePuncher.Volumes.Faces
 {
     internal class NoIntersectException : Exception
     {

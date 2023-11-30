@@ -50,7 +50,8 @@ namespace HolePunching
                 while (punchQueue.Count > 0)
                 {
                     var (punchable, pos, dir, r) = punchQueue.Dequeue();
-                    await Task.Run(() => punchable.AddHoleFromWorld(pos, dir, r));
+                    //punchable.AddHoleFromWorld(pos, dir, r);
+                    punchable.AddChipFromWorld(pos-new Vector3(1, 1, 1), dir, 3, 3);
                 }
             }
         }
