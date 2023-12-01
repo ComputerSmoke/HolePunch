@@ -270,7 +270,7 @@ namespace HolePuncher
             if (holeSlice == null || !holeSlice.Envelope.Intersects(triangle.geometry.Envelope))
                 return [triangle];
 
-            Geometry cutProj = triangle.geometry.Difference(holeSlice.Difference(holeSlice.Boundary));
+            Geometry cutProj = GeometryHelper.Difference(triangle.geometry, holeSlice);
             return Triangulate(triangle.plane, cutProj);
         }
         private static Triangle[] Punch(Triangle triangle, Volume hole)

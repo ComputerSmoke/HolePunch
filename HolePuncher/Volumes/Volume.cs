@@ -8,6 +8,8 @@ using NetTopologySuite.Geometries;
 using NetTopologySuite.Operation.Polygonize;
 using HolePuncher.Volumes.Faces;
 using Plane = HolePuncher.Volumes.Faces.Plane;
+using Point = NetTopologySuite.Geometries.Point;
+using System.ComponentModel;
 
 namespace HolePuncher.Volumes
 {
@@ -55,14 +57,34 @@ namespace HolePuncher.Volumes
         //Take slice of this volume
         public Geometry Slice(Plane slicer)
         {
-            Polygonizer polygonizer = new(true);
+            Polygonizer polygonizer = new();
             for(int i = 0; i < Faces.Length; i++)
             {
                 Face face = Faces[i];
                 Geometry faceSlice = face.Slice(slicer);
-                polygonizer.Add(faceSlice);
+                polygonizer.Add(RoundCoords(faceSlice, 3));
             }
             return polygonizer.GetGeometry();
+        }
+        private static Geometry RoundCoords(Geometry input, int decimals)
+        {
+            if (input.IsEmpty)
+                return input;
+            Coordinate[] translated = new Coordinate[input.Coordinates.Length];
+            double div = Math.Pow(10, decimals);
+            for (int i = 0; i < input.Coordinates.Length; i++)
+            {
+                Coordinate coord = new Coordinate(
+                    Math.Round(input.Coordinates[i].X * div)/div, 
+                    Math.Round(input.Coordinates[i].Y*div)/div
+                );
+                translated[i] = coord;
+            }
+            if (input is LineString)
+                return GeometryHelper.GeometryFactory.CreateLineString(translated);
+            if(input is Point)
+                return GeometryHelper.GeometryFactory.CreatePoint(translated[0]);
+            throw new Exception("Unrecognized geometry");
         }
         public Geometry Slice(Plane slicer, Geometry interestArea)
         {

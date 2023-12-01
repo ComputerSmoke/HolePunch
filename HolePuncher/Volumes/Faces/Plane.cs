@@ -88,7 +88,7 @@ namespace HolePuncher.Volumes.Faces
         }
         public bool Parallel(Plane other)
         {
-            return Math.Abs(Vector3.Dot(normal, normal - other.normal)) <= O;
+            return Vector3.Cross(normal, other.normal).LengthSquared() <= O*O;
         }
         public bool Parallel(Vector3 lineDir)
         {
@@ -102,7 +102,7 @@ namespace HolePuncher.Volumes.Faces
             Vector3 dir = Vector3.Cross(normal, plane.normal);
             Vector3 perpDir = Vector3.Cross(dir, plane.normal);
             Vector3 intersection = ToWorldSpace(LineIntersect(plane.origin, perpDir));
-            return new Line(ToPlaneSpace(intersection), ToPlaneSpace(dir));
+            return new Line(ToPlaneSpace(intersection), ToPlaneSpace(origin+dir));
         }
     }
 }

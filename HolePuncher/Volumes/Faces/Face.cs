@@ -60,28 +60,16 @@ namespace HolePuncher.Volumes.Faces
             {
                 Coordinate[] translated = new Coordinate[coords.Length];
                 for (int i = 0; i < coords.Length; i++)
-                    translated[i] = coords[i];
+                    translated[i] = TranslateCoord(coords[i]);
                 return GeometryHelper.GeometryFactory.CreateLineString(translated);
             }
             if (slice is Point point)
                 return TranslatePoint(point.Coordinate);
-            if (slice is MultiPoint multiPoint)
-            {
-                Point[] points = new Point[multiPoint.Count];
-                for (int i = 0; i < points.Length; i++)
-                    points[i] = TranslatePoint(multiPoint[i].Coordinate);
-                return GeometryHelper.GeometryFactory.CreateMultiPoint(points);
-            }
             if (slice is LineString line)
-            {
                 return TranslateLineString(line.Coordinates);
-            }
             if (slice is MultiLineString multiLine)
             {
-                LineString[] lineStrings = new LineString[multiLine.Count];
-                for (int i = 0; i < lineStrings.Length; i++)
-                    lineStrings[i] = TranslateLineString(multiLine[i].Coordinates);
-                return GeometryHelper.GeometryFactory.CreateMultiLineString(lineStrings);
+                return TranslateLineString(multiLine.Coordinates);
             }
             throw new Exception("Unrecognized geometry in face slice");
         }

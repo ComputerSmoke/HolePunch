@@ -9,6 +9,7 @@ using Stride.Core.Mathematics;
 using Stride.Input;
 using HolePuncher;
 using FFmpeg.AutoGen;
+using BulletSharp.SoftBody;
 
 namespace HolePunching
 {

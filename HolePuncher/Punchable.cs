@@ -33,6 +33,7 @@ namespace HolePuncher
             AddHole(new Prism(new Vector3(1, 0, 1), new Vector3(-1, 0, -1), .1f, 3));
             AddHole(new Prism(new Vector3(0, 2, 0), Vector3.UnitY, .1f, 8));
             AddHole(new Prism(new Vector3(2, .5f, .5f), Vector3.UnitX, .1f, 8));*/
+            AddChipFromWorld(new Vector3(.5f, .5f, .5f), Vector3.UnitY, 3, 3);
         }
         private void SetModel(VertexPositionNormalTexture[] vertices)
         {
@@ -131,8 +132,8 @@ namespace HolePuncher
         }
         public void AddChipFromWorld(Vector3 pos, Vector3 dir, float width, float depth)
         {
-            //Pyramid hole = new(pos, width, depth);
-            Cube hole = new(pos, width);
+            Pyramid hole = new(pos, width, depth);
+            //Cube hole = new(pos, width);
             //TODO: rotate hole towards dir
             AddHole(hole);
         }
