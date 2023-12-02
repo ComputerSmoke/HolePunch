@@ -31,6 +31,22 @@ Hierarchy:
                         Type: !LightSkybox
                             Skybox: 93b06e4b-e788-4661-b027-acb6ea92b532:Skybox
         -   Entity:
+                Id: 233a650a-dc16-44fb-8471-b04ce84b7de2
+                Name: holeRenderer
+                Components:
+                    08439ac859ff99dff35abc270fd5b8e1: !TransformComponent
+                        Id: 61b8b589-a4d7-4dea-8769-5cfce2bbf63a
+                        Position: {X: 0.0, Y: 0.0, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    2ac1b024589be46451958e9a21bcb1e4: !HolePuncher.Volumes.VolumeRenderer,HolePuncher
+                        Id: f1f88564-9c04-42aa-919c-01e52cd9652d
+                    5f8d24170c974d634221a769c795d19f: !ModelComponent
+                        Id: 7dcddf7f-3e19-4c71-969a-15d351589a19
+                        Model: null
+                        Materials: {}
+        -   Entity:
                 Id: 2928c24d-2d68-42f8-bcd8-e26d30622146
                 Name: Raycaster
                 Components:
@@ -105,7 +121,8 @@ Hierarchy:
                         Position: {X: 0.0, Y: 0.5, Z: 0.0}
                         Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
-                        Children: {}
+                        Children:
+                            d9e3b31e231fbbc780032898d058ca57: ref!! 61b8b589-a4d7-4dea-8769-5cfce2bbf63a
                     8ad9b664a80ce7a4ffc4f12020b33d68: !ModelComponent
                         Id: a9f00135-e2ef-4a15-890d-b4781de327dd
                         Model: 7bcad567-5181-4317-9d44-15c03af5f87c:Sphere
@@ -113,6 +130,7 @@ Hierarchy:
                             fc8377c48785ab704fc087e6fbada49c~0: 273d0317-0c94-41e7-9f48-fecb21a81e1d:Sphere Material
                     4499d96a826f9712625d7bf2afc68f3c: !HolePuncher.Punchable,HolePuncher
                         Id: fde3f06b-42e9-4436-a229-60ab04a50d6b
+                        DebugHoleRenderer: ref!! f1f88564-9c04-42aa-919c-01e52cd9652d
                     15a9b5d28f5c80f16bc17d06bb3d80de: !RigidbodyComponent
                         Id: 87959ee4-5b5b-4e1f-97c6-d634828abb5e
                         CanSleep: false
@@ -152,6 +170,7 @@ Hierarchy:
                             fc8377c48785ab704fc087e6fbada49c~0: 273d0317-0c94-41e7-9f48-fecb21a81e1d:Sphere Material
                     4499d96a826f9712625d7bf2afc68f3c: !HolePuncher.Punchable,HolePuncher
                         Id: 0e4c34df-933e-43e1-8497-1dff269e6af3
+                        DebugHoleRenderer: null
                     15a9b5d28f5c80f16bc17d06bb3d80de: !RigidbodyComponent
                         Id: 1520db73-cbef-47ca-b0aa-7f7967bf35ca
                         CanSleep: false

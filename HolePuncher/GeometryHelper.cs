@@ -8,6 +8,9 @@ using NetTopologySuite;
 using NetTopologySuite.Geometries;
 using NetTopologySuite.Noding;
 using System.Security.Cryptography;
+using NetTopologySuite.Triangulate.Polygon;
+using NetTopologySuite.Triangulate.Tri;
+using Vortice.Vulkan;
 
 namespace HolePuncher
 {
@@ -78,16 +81,6 @@ namespace HolePuncher
         public static Geometry CreateEmpty()
         {
             return GeometryFactory.CreateEmpty(Dimension.Unknown);
-        }
-        //Difference of two geometries which may be collections
-        public static Geometry Difference(Geometry g1, Geometry g2)
-        {
-            Geometry res = CreateEmpty();
-            for(int i = 0; i < g1.NumGeometries; i++)
-                res.Union(g1.GetGeometryN(i));
-            for(int i = 0; i < g2.NumGeometries; i++) 
-                res.Difference(g2.GetGeometryN(i));
-            return res;
         }
     }
 }

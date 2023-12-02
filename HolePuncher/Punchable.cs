@@ -20,6 +20,7 @@ namespace HolePuncher
         private ModelComponent modelComponent;
         private VertexPositionNormalTexture[] vertices;
         private Material material;
+        public VolumeRenderer DebugHoleRenderer { get; set; }
         public override void Start()
         {
             base.Start();
@@ -33,7 +34,7 @@ namespace HolePuncher
             AddHole(new Prism(new Vector3(1, 0, 1), new Vector3(-1, 0, -1), .1f, 3));
             AddHole(new Prism(new Vector3(0, 2, 0), Vector3.UnitY, .1f, 8));
             AddHole(new Prism(new Vector3(2, .5f, .5f), Vector3.UnitX, .1f, 8));*/
-            AddChipFromWorld(new Vector3(.5f, .5f, .5f), Vector3.UnitY, 3, 3);
+            AddChipFromWorld(Vector3.Zero, Vector3.UnitY, 1, 1);
         }
         private void SetModel(VertexPositionNormalTexture[] vertices)
         {
@@ -91,7 +92,7 @@ namespace HolePuncher
         {
             VertexPositionNormalTexture[] res = new VertexPositionNormalTexture[6];
 
-            res[0].Position = pos;
+            res[0].Position = pos + new Vector3(.01f,0,0);
             res[1].Position = pos + new Vector3(1, 0, 0);
             res[2].Position = pos + new Vector3(1, 0, 1);
             res[5].Position = pos;
@@ -130,20 +131,14 @@ namespace HolePuncher
             Prism hole = new(pos, -dir, radius, 6);
             AddHole(hole);
         }
+        //TODO: move to world space
         public void AddChipFromWorld(Vector3 pos, Vector3 dir, float width, float depth)
         {
             Pyramid hole = new(pos, width, depth);
             //Cube hole = new(pos, width);
             //TODO: rotate hole towards dir
             AddHole(hole);
-        }
-        private int Fib(int n)
-        {
-            if (n == 0)
-                return 1;
-            if (n == 1)
-                return 1;
-            return Fib(n - 1) + Fib(n - 2);
+            DebugHoleRenderer?.Render(hole);
         }
     }
 }

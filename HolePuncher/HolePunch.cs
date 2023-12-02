@@ -57,24 +57,9 @@ namespace HolePuncher
                 triangles[i] = new Triangle(vertices[i*3].Position, vertices[i*3+1].Position, vertices[i*3+2].Position);
             (List<Triangle> involved, List<Triangle> uninvolved) = FindAffected(triangles, hole);
             List<Triangle> punched = CutFaces(involved, hole);
-            punched.AddRange(InternalWalls(involved, hole));
+            //punched.AddRange(InternalWalls(involved, hole));
             punched.AddRange(uninvolved);
-            return TrianglesToVertices(punched);
-        }
-        //Turn a list of triangles into a VertexPositionNormalTexture array
-        private static VertexPositionNormalTexture[] TrianglesToVertices(List<Triangle> triangles)
-        {
-            VertexPositionNormalTexture[] newVertices = new VertexPositionNormalTexture[triangles.Count * 3];
-            for (int i = 0; i < triangles.Count; i++)
-            {
-                newVertices[i * 3].Position = triangles[i].V1;
-                newVertices[i * 3 + 1].Position = triangles[i].V2;
-                newVertices[i * 3 + 2].Position = triangles[i].V3;
-                newVertices[i * 3].Normal = triangles[i].plane.normal;
-                newVertices[i * 3 + 1].Normal = triangles[i].plane.normal;
-                newVertices[i * 3 + 2].Normal = triangles[i].plane.normal;
-            }
-            return newVertices;
+            return Triangle.TrianglesToVertices(punched);
         }
         //Sort triangles into a list that might be intersected, and one that is not intersected by hole
         private static (List<Triangle>, List<Triangle>) FindAffected(Triangle[] triangles, Volume hole)
@@ -152,7 +137,7 @@ namespace HolePuncher
             }
             List<Triangle> walls = BuildAllWalls(wallIntersects, wallPlanes);
             punched.AddRange(walls);
-            return TrianglesToVertices(punched);
+            return Triangle.TrianglesToVertices(punched);
         }
         private static Plane EdgePlane(Coordinate c1, Coordinate c2, Plane facePlane)
         {
@@ -217,7 +202,7 @@ namespace HolePuncher
                 }
                 catch (Exception ex) { }
             }
-            return Triangulate(plane, wall);
+            return Triangle.Triangulate(plane, wall);
         }
         private static int CompareLines(LineString line1, LineString line2)
         {
@@ -270,43 +255,17 @@ namespace HolePuncher
             if (holeSlice == null || !holeSlice.Envelope.Intersects(triangle.geometry.Envelope))
                 return [triangle];
 
-            Geometry cutProj = GeometryHelper.Difference(triangle.geometry, holeSlice);
-            return Triangulate(triangle.plane, cutProj);
+            Geometry cutProj = triangle.geometry.Difference(holeSlice);
+            return Triangle.Triangulate(triangle.plane, cutProj);
         }
         private static Triangle[] Punch(Triangle triangle, Volume hole)
         {
             if(!hole.BoundingBox.Intersects(triangle.BoundingBox))
                 return [triangle];
             Geometry holeSlice = hole.Slice(triangle.plane);
+            if (holeSlice != null && !holeSlice.IsEmpty)
+                holeSlice = holeSlice.GetGeometryN(0);
             return Punch(triangle, holeSlice);
-        }
-        //Turn geometry on plane into triangles, then put back in 3-space from plane
-        private static Triangle[] Triangulate(Plane plane, Geometry geom)
-        {
-            if (geom.IsEmpty || geom.Coordinates.Length < 3)
-                return [];
-            try
-            {
-                var tris = new ConstrainedDelaunayTriangulator(geom).GetTriangles();
-                Triangle[] res = new Triangle[tris.Count];
-
-                Triangle TriToTriangle(Tri t) =>
-                new(
-                        plane.ToWorldSpace(GeometryHelper.CoordToVec(t.GetCoordinate(0))),
-                        plane.ToWorldSpace(GeometryHelper.CoordToVec(t.GetCoordinate(1))),
-                        plane.ToWorldSpace(GeometryHelper.CoordToVec(t.GetCoordinate(2)))
-                    );
-                int i = 0;
-                foreach (Tri t in tris)
-                {
-                    res[i] = TriToTriangle(t);
-                    i++;
-                }
-                return res;
-            } catch
-            {
-                return [];
-            }
         }
     }
 }

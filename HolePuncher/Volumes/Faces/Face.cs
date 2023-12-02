@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Stride.Core.Mathematics;
 using Point = NetTopologySuite.Geometries.Point;
 using System.ComponentModel;
+using Stride.Core.Mathematics;
 
 namespace HolePuncher.Volumes.Faces
 {
@@ -78,16 +78,17 @@ namespace HolePuncher.Volumes.Faces
         {
             float minDist = 0;
             float maxDist = 0;
+            Vector2 dir = line.p2 - line.p1;
             foreach (Coordinate coord in geometry.Coordinates)
             {
-                float dist = Vector2.Dot(line.dir, GeometryHelper.CoordToVec(coord) - line.point);
+                float dist = Vector2.Dot(dir, GeometryHelper.CoordToVec(coord) - line.p1);
                 if (dist < minDist)
                     minDist = dist;
                 if (dist > maxDist)
                     maxDist = dist;
             }
-            Coordinate c1 = GeometryHelper.VecToCoord(line.point + line.dir * (minDist - 1e-6f));
-            Coordinate c2 = GeometryHelper.VecToCoord(line.point + line.dir * (maxDist + 1e-6f));
+            Coordinate c1 = GeometryHelper.VecToCoord(line.p1 + dir * (minDist * 2));
+            Coordinate c2 = GeometryHelper.VecToCoord(line.p1 + dir * (maxDist * 2));
             return GeometryHelper.CreateLineSegment(c1, c2);
         }
     }

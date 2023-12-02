@@ -10,6 +10,11 @@ using HolePuncher.Volumes.Faces;
 using Plane = HolePuncher.Volumes.Faces.Plane;
 using Point = NetTopologySuite.Geometries.Point;
 using System.ComponentModel;
+using Valve.VR;
+using Stride.Engine;
+using Stride.Rendering;
+using Stride.Graphics;
+using Triangle = HolePuncher.Volumes.Faces.Triangle;
 
 namespace HolePuncher.Volumes
 {
@@ -52,39 +57,98 @@ namespace HolePuncher.Volumes
     //Represents a convex 3d shape
     public class Volume(Face[] faces, BoundingBox3D boundingBox) : IVolume
     {
+        readonly struct FaceSlice(Coordinate c0, Coordinate c1, Vector2 normal)
+        {
+            public readonly Coordinate c0 = c0;
+            public readonly Coordinate c1 = c1;
+            public readonly Vector2 normal = normal;
+        }
         public Face[] Faces { get; } = faces;
         public BoundingBox3D BoundingBox { get; set; } = boundingBox;
         //Take slice of this volume
         public Geometry Slice(Plane slicer)
         {
-            Polygonizer polygonizer = new();
+            Geometry res = null;
+            List<FaceSlice> slices = [];
             for(int i = 0; i < Faces.Length; i++)
             {
                 Face face = Faces[i];
-                Geometry faceSlice = face.Slice(slicer);
-                polygonizer.Add(RoundCoords(faceSlice, 3));
+                Geometry faceSliceGeometry = face.Slice(slicer);
+                if (faceSliceGeometry.Coordinates.Length < 2)
+                    continue;
+                Vector2 normal = slicer.Project(face.plane.normal + slicer.origin);
+                normal.Normalize();
+                slices.Add(new FaceSlice(faceSliceGeometry.Coordinates[0], faceSliceGeometry.Coordinates[^1], normal));
             }
-            return polygonizer.GetGeometry();
-        }
-        private static Geometry RoundCoords(Geometry input, int decimals)
-        {
-            if (input.IsEmpty)
-                return input;
-            Coordinate[] translated = new Coordinate[input.Coordinates.Length];
-            double div = Math.Pow(10, decimals);
-            for (int i = 0; i < input.Coordinates.Length; i++)
+            //Special case: remove matching slices if plane intersected an edge of the volume
+            List<FaceSlice> unmatchedSlices = [];
+            for(int i = 0; i < slices.Count; i++)
             {
-                Coordinate coord = new Coordinate(
-                    Math.Round(input.Coordinates[i].X * div)/div, 
-                    Math.Round(input.Coordinates[i].Y*div)/div
-                );
-                translated[i] = coord;
+                bool matches = false;
+                for(int j = 0; j < slices.Count; j++)
+                {
+                    if (i == j)
+                        continue;
+                    Coordinate ci0 = slices[i].c0;
+                    Coordinate ci1 = slices[i].c1;
+                    Coordinate cj0 = slices[j].c0;
+                    Coordinate cj1 = slices[j].c1;
+                    if (ci0.Distance(cj0) <= Plane.O && ci1.Distance(cj1) <= Plane.O
+                        || ci1.Distance(cj0) <= Plane.O && ci0.Distance(cj1) <= Plane.O)
+                        matches = true;
+                }
+                if (!matches)
+                    unmatchedSlices.Add(slices[i]);
             }
-            if (input is LineString)
-                return GeometryHelper.GeometryFactory.CreateLineString(translated);
-            if(input is Point)
-                return GeometryHelper.GeometryFactory.CreatePoint(translated[0]);
-            throw new Exception("Unrecognized geometry");
+            foreach(FaceSlice faceSlice in unmatchedSlices)
+            {
+                Coordinate c3 = GeometryHelper.VecToCoord(
+                    GeometryHelper.CoordToVec(faceSlice.c0) - faceSlice.normal * (BoundingBox.max-BoundingBox.min).Length()
+                );
+                Coordinate c4 = GeometryHelper.VecToCoord(
+                    GeometryHelper.CoordToVec(faceSlice.c1) - faceSlice.normal * (BoundingBox.max - BoundingBox.min).Length()
+                );
+                Geometry shadow = GeometryHelper.CreatePolygon([faceSlice.c0, faceSlice.c1, c4, c3, faceSlice.c0]);
+                res = res == null ? shadow : res.Intersection(shadow);
+            }
+            return res ?? GeometryHelper.CreateEmpty();
+        }
+        //Adjust line segments to connect at endpoints when possible within maxDist
+        private static List<Geometry> ConnectLines(List<Geometry> slices, float maxDist)
+        {
+            List<Geometry> res = [];
+            //Get the valid line strings
+            foreach(Geometry geometry in slices)
+            {
+                if (geometry.IsEmpty || geometry.Coordinates.Length < 2)
+                    continue;
+                Geometry line = GeometryHelper.CreateLineSegment(geometry.Coordinates[0], geometry.Coordinates[^1]);
+                res.Add(line);
+            }
+            if (res.Count == 0)
+                return res;
+            Coordinate ConnectCoord(Coordinate coord, int lineIdx)
+            {
+                Coordinate nearest = lineIdx == 0 ? res[1].Coordinate : res[0].Coordinate;
+                Coordinate FindNearest(Coordinate other) => 
+                    coord.Distance(nearest) > coord.Distance(other) ? other : nearest;
+                for(int i = 0; i < res.Count; i++)
+                {
+                    if (i == lineIdx)
+                        continue;
+                    nearest = FindNearest(res[i].Coordinates[0]);
+                    nearest = FindNearest(res[i].Coordinates[1]);
+                }
+                return coord.Distance(nearest) < maxDist ? nearest : coord;
+            }
+            //Adjust them to connect at edges where possible.
+            for(int i = 0; i < res.Count; i++)
+            {
+                Coordinate c1 = ConnectCoord(res[i].Coordinates[0], i);
+                Coordinate c2 = ConnectCoord(res[i].Coordinates[1], i);
+                res[i] = GeometryHelper.CreateLineSegment(c1, c2);
+            }
+            return res;
         }
         public Geometry Slice(Plane slicer, Geometry interestArea)
         {
@@ -96,6 +160,16 @@ namespace HolePuncher.Volumes
             foreach (Face face in Faces)
                 face.plane.RotateAround(target, axis, angle);
             BoundingBox = BoundingBox.RotateAround(target, axis, angle);
+        }
+        public VertexPositionNormalTexture[] GetVertexPositionNormalTexture()
+        {
+            List<Triangle> triangles = [];
+            foreach(Face face in Faces)
+            {
+                Triangle[] triangulation = Triangle.Triangulate(face.plane, face.geometry);
+                triangles.AddRange(triangulation);
+            }
+            return Triangle.TrianglesToVertices(triangles);
         }
     }
 }

@@ -10,10 +10,10 @@ using Stride.Core.Mathematics;
 
 namespace HolePuncher.Volumes.Faces
 {
-    public struct Line(Vector2 point, Vector2 dir)
+    public struct Line(Vector2 p1, Vector2 p2)
     {
-        public Vector2 point = point;
-        public Vector2 dir = dir;
+        public Vector2 p1 = p1;
+        public Vector2 p2 = p2;
     }
     public class Plane
     {
@@ -102,7 +102,7 @@ namespace HolePuncher.Volumes.Faces
             Vector3 dir = Vector3.Cross(normal, plane.normal);
             Vector3 perpDir = Vector3.Cross(dir, plane.normal);
             Vector3 intersection = ToWorldSpace(LineIntersect(plane.origin, perpDir));
-            return new Line(ToPlaneSpace(intersection), ToPlaneSpace(origin+dir));
+            return new Line(ToPlaneSpace(intersection), ToPlaneSpace(intersection+dir));
         }
     }
 }

@@ -22,10 +22,10 @@ namespace HolePuncher.Volumes
         {
             var (p0, p1, p2, p3) = Vertices(pos, width, height);
             return [
-                new Face([p0, p1, p2]),
-                new Face([p0, p2, p3]),
-                new Face([p0, p3, p1]),
-                new Face([p1, p3, p2])
+                new Face([p0, p2, p1]),
+                new Face([p0, p3, p2]),
+                new Face([p0, p1, p3]),
+                new Face([p1, p2, p3])
             ];
         }
         private static BoundingBox3D GetBoundingBox(Vector3 pos, float width, float height)
