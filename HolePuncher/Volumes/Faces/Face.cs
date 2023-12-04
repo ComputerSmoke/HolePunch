@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Point = NetTopologySuite.Geometries.Point;
 using System.ComponentModel;
 using Stride.Core.Mathematics;
+using Silk.NET.OpenXR;
 
 namespace HolePuncher.Volumes.Faces
 {
@@ -38,8 +39,13 @@ namespace HolePuncher.Volumes.Faces
             geometry = GeometryHelper.CreatePolygon(coords);
             BoundingBox = new BoundingBox3D(vertices);
         }
-        //Take slice of this face
+        //Take slice of this face. Returns tuple with slice on local face plane and slice on slicer plane.
         public Geometry Slice(Plane slicer)
+        {
+            return TranslateGeometry(SliceLocal(slicer), slicer);
+        }
+        //Get slice of face in local coordinates, not in coordinates of other plane.
+        public Geometry SliceLocal(Plane slicer)
         {
             if (plane.Parallel(slicer))
                 return GeometryHelper.CreateEmpty();
@@ -48,30 +54,45 @@ namespace HolePuncher.Volumes.Faces
             Geometry slice = geometry.Intersection(segment);
             if (slice.IsEmpty || !slice.IsValid)
                 return GeometryHelper.CreateEmpty();
+            return slice;
+        }
+        //Convert geometry from local space of this plane to local of another plane, must be along intersection of planes.
+        private Geometry TranslateGeometry(Geometry geometry, Plane dest)
+        {
+            if (geometry.IsEmpty)
+                return geometry;
             Coordinate TranslateCoord(Coordinate coord)
             {
-                return GeometryHelper.VecToCoord(slicer.ToPlaneSpace(plane.ToWorldSpace(GeometryHelper.CoordToVec(coord))));
+                return GeometryHelper.VecToCoord(dest.ToPlaneSpace(plane.ToWorldSpace(GeometryHelper.CoordToVec(coord))));
             }
             Point TranslatePoint(Coordinate coord)
             {
                 return GeometryHelper.GeometryFactory.CreatePoint(TranslateCoord(coord));
             }
-            LineString TranslateLineString(Coordinate[] coords)
+            Coordinate[] TranslateCoords(Coordinate[] coords)
             {
                 Coordinate[] translated = new Coordinate[coords.Length];
                 for (int i = 0; i < coords.Length; i++)
                     translated[i] = TranslateCoord(coords[i]);
-                return GeometryHelper.GeometryFactory.CreateLineString(translated);
+                return translated;
             }
-            if (slice is Point point)
-                return TranslatePoint(point.Coordinate);
-            if (slice is LineString line)
-                return TranslateLineString(line.Coordinates);
-            if (slice is MultiLineString multiLine)
+            LineString TranslateLineString(Coordinate[] coords)
             {
-                return TranslateLineString(multiLine.Coordinates);
+                return GeometryHelper.GeometryFactory.CreateLineString(TranslateCoords(coords));
             }
-            throw new Exception("Unrecognized geometry in face slice");
+            Polygon TranslatePoly(Coordinate[] coords)
+            {
+                return GeometryHelper.GeometryFactory.CreatePolygon(TranslateCoords(coords));
+            }
+            if (geometry is Point point)
+                return TranslatePoint(point.Coordinate);
+            if (geometry is LineString line)
+                return TranslateLineString(line.Coordinates);
+            if (geometry is MultiLineString multiLine)
+                return TranslateLineString(multiLine.Coordinates);
+            if(geometry is Polygon poly)
+                return TranslatePoly(poly.Coordinates);
+            throw new Exception("Unrecognized geometry geometry plane conversion.");
         }
         //Cut a line down to a segment that could intersect geometry
         private LineString CropLine(Line line)

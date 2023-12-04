@@ -38,7 +38,7 @@ namespace HolePuncher
         {
             p1 = trianglePlane.ToWorldSpace(c1);
             p2 = trianglePlane.ToWorldSpace(c2);
-            forward = Vector3.Dot(face.plane.unitY, trianglePlane.normal) > 0;
+            forward = Vector3.Dot(face.plane.unitY, trianglePlane.normal) < 0;
         }
     }
     struct WallIntersect2D(Plane plane, WallIntersect intersect)
@@ -57,7 +57,7 @@ namespace HolePuncher
                 triangles[i] = new Triangle(vertices[i*3].Position, vertices[i*3+1].Position, vertices[i*3+2].Position);
             (List<Triangle> involved, List<Triangle> uninvolved) = FindAffected(triangles, hole);
             List<Triangle> punched = CutFaces(involved, hole);
-            //punched.AddRange(InternalWalls(involved, hole));
+            punched.AddRange(InternalWalls(involved, hole));
             punched.AddRange(uninvolved);
             return Triangle.TrianglesToVertices(punched);
         }
@@ -100,8 +100,21 @@ namespace HolePuncher
         }
         private static Triangle[] InternalWalls(List<Triangle> triangles, Face face)
         {
-            List<WallIntersect> wallIntersects = FaceIntersects(triangles, face);
-            return BuildWalls(wallIntersects, face.plane);
+            float extendDist = (float)face.geometry.Envelope.Length / 2;
+            Geometry res = face.geometry;
+            foreach(Triangle triangle in triangles)
+            {
+                Geometry sliceGeometry = face.SliceLocal(triangle.plane);
+                if (sliceGeometry.Coordinates.Length < 2)
+                    continue;
+                FaceSlice slice = new(
+                    sliceGeometry.Coordinates[0], 
+                    sliceGeometry.Coordinates[^1], 
+                    face.plane.Project(triangle.plane.normal+face.plane.origin)
+                );
+                res = res.Intersection(slice.ExtendToBox(extendDist));
+            }
+            return Triangle.Triangulate(face.plane, res, true);
         }
         private static List<WallIntersect> FaceIntersects(List<Triangle> triangles, Face face)
         {
@@ -202,7 +215,7 @@ namespace HolePuncher
                 }
                 catch (Exception ex) { }
             }
-            return Triangle.Triangulate(plane, wall);
+            return Triangle.Triangulate(plane, wall, false);
         }
         private static int CompareLines(LineString line1, LineString line2)
         {
@@ -256,7 +269,7 @@ namespace HolePuncher
                 return [triangle];
 
             Geometry cutProj = triangle.geometry.Difference(holeSlice);
-            return Triangle.Triangulate(triangle.plane, cutProj);
+            return Triangle.Triangulate(triangle.plane, cutProj, false);
         }
         private static Triangle[] Punch(Triangle triangle, Volume hole)
         {

@@ -15,6 +15,7 @@ using Stride.Engine;
 using Stride.Rendering;
 using Stride.Graphics;
 using Triangle = HolePuncher.Volumes.Faces.Triangle;
+using System.Security.Cryptography.X509Certificates;
 
 namespace HolePuncher.Volumes
 {
@@ -54,15 +55,26 @@ namespace HolePuncher.Volumes
             return new BoundingBox3D(vertices);
         }
     }
+    public readonly struct FaceSlice(Coordinate c0, Coordinate c1, Vector2 normal)
+    {
+        public readonly Coordinate c0 = c0;
+        public readonly Coordinate c1 = c1;
+        //Normal points outside of box that will be created, opposite of direction of extension.
+        public readonly Vector2 normal = normal;
+        public readonly Polygon ExtendToBox(float dist)
+        {
+            Coordinate c3 = GeometryHelper.VecToCoord(
+                GeometryHelper.CoordToVec(c0) - normal * dist
+            );
+            Coordinate c4 = GeometryHelper.VecToCoord(
+                GeometryHelper.CoordToVec(c1) - normal * dist
+            );
+            return GeometryHelper.CreatePolygon([c0, c1, c4, c3, c0]);
+        }
+    }
     //Represents a convex 3d shape
     public class Volume(Face[] faces, BoundingBox3D boundingBox) : IVolume
     {
-        readonly struct FaceSlice(Coordinate c0, Coordinate c1, Vector2 normal)
-        {
-            public readonly Coordinate c0 = c0;
-            public readonly Coordinate c1 = c1;
-            public readonly Vector2 normal = normal;
-        }
         public Face[] Faces { get; } = faces;
         public BoundingBox3D BoundingBox { get; set; } = boundingBox;
         //Take slice of this volume
@@ -102,13 +114,7 @@ namespace HolePuncher.Volumes
             }
             foreach(FaceSlice faceSlice in unmatchedSlices)
             {
-                Coordinate c3 = GeometryHelper.VecToCoord(
-                    GeometryHelper.CoordToVec(faceSlice.c0) - faceSlice.normal * (BoundingBox.max-BoundingBox.min).Length()
-                );
-                Coordinate c4 = GeometryHelper.VecToCoord(
-                    GeometryHelper.CoordToVec(faceSlice.c1) - faceSlice.normal * (BoundingBox.max - BoundingBox.min).Length()
-                );
-                Geometry shadow = GeometryHelper.CreatePolygon([faceSlice.c0, faceSlice.c1, c4, c3, faceSlice.c0]);
+                Geometry shadow = faceSlice.ExtendToBox((BoundingBox.max - BoundingBox.min).Length());
                 res = res == null ? shadow : res.Intersection(shadow);
             }
             return res ?? GeometryHelper.CreateEmpty();
@@ -166,7 +172,7 @@ namespace HolePuncher.Volumes
             List<Triangle> triangles = [];
             foreach(Face face in Faces)
             {
-                Triangle[] triangulation = Triangle.Triangulate(face.plane, face.geometry);
+                Triangle[] triangulation = Triangle.Triangulate(face.plane, face.geometry, false);
                 triangles.AddRange(triangulation);
             }
             return Triangle.TrianglesToVertices(triangles);

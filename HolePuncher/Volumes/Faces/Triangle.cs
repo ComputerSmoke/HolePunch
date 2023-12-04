@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using NetTopologySuite.Geometries;
 using NetTopologySuite.Triangulate.Polygon;
 using NetTopologySuite.Triangulate.Tri;
+using Silk.NET.OpenXR;
 using Stride.Core.Mathematics;
 using Stride.Graphics;
 
@@ -17,7 +18,7 @@ namespace HolePuncher.Volumes.Faces
         public Vector3 V2 { get { return vertices[1]; } }
         public Vector3 V3 { get { return vertices[2]; } }
         //Turn geometry on plane into triangles, then put back in 3-space from plane
-        public static Triangle[] Triangulate(Plane plane, Geometry geom)
+        public static Triangle[] Triangulate(Plane plane, Geometry geom, bool invertNormal)
         {
             if (geom.IsEmpty || geom.Coordinates.Length < 3)
                 return [];
@@ -26,12 +27,20 @@ namespace HolePuncher.Volumes.Faces
                 var tris = new ConstrainedDelaunayTriangulator(geom).GetTriangles();
                 Triangle[] res = new Triangle[tris.Count];
 
-                Triangle TriToTriangle(Tri t) =>
-                new(
+                Triangle TriToTriangle(Tri t)
+                {
+                    if(!invertNormal)
+                        return new(
+                            plane.ToWorldSpace(GeometryHelper.CoordToVec(t.GetCoordinate(0))),
+                            plane.ToWorldSpace(GeometryHelper.CoordToVec(t.GetCoordinate(1))),
+                            plane.ToWorldSpace(GeometryHelper.CoordToVec(t.GetCoordinate(2)))
+                        );
+                    return new(
                         plane.ToWorldSpace(GeometryHelper.CoordToVec(t.GetCoordinate(0))),
-                        plane.ToWorldSpace(GeometryHelper.CoordToVec(t.GetCoordinate(1))),
-                        plane.ToWorldSpace(GeometryHelper.CoordToVec(t.GetCoordinate(2)))
+                        plane.ToWorldSpace(GeometryHelper.CoordToVec(t.GetCoordinate(2))),
+                        plane.ToWorldSpace(GeometryHelper.CoordToVec(t.GetCoordinate(1)))
                     );
+                }
                 int i = 0;
                 foreach (Tri t in tris)
                 {
