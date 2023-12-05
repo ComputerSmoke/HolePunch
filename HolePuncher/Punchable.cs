@@ -11,6 +11,7 @@ using Stride.Rendering.Materials.ComputeColors;
 using Stride.Rendering.Materials;
 using Valve.VR;
 using HolePuncher.Volumes;
+using HolePuncher.Volumes.Faces;
 
 namespace HolePuncher
 {
@@ -18,60 +19,42 @@ namespace HolePuncher
     {
 
         private ModelComponent modelComponent;
-        private VertexPositionNormalTexture[] vertices;
         private Material material;
         public VolumeRenderer DebugHoleRenderer { get; set; }
+        private FaceTree faceTree;
+        private Queue<Prism> holeQueue;
+        private bool queueLock;
+        public int VertsPerNode { get; set; }
+        public float MinNodeVolume { get; set; }
         public override void Start()
         {
             base.Start();
             modelComponent = Entity.Get<ModelComponent>();
-            vertices = ExtractVertices(modelComponent.Model);
             modelComponent.Model = new();
             material = Content.Load<Material>("Sphere Material");
-            SetModel(vertices);
-            /*AddHole(new Prism(new Vector3(2, 0, 0), Vector3.UnitX, .1f, 8));
-            AddHole(new Prism(new Vector3(1, -.5f, 0), Vector3.UnitX, .1f, 6));
+            faceTree = new(new Vector3(-.5f, -.5f, -.5f), new Vector3(.5f, .5f, .5f), GraphicsDevice, VertsPerNode, MinNodeVolume);
+            faceTree.SetVertices(Cube());
+            UpdateModel();
+            holeQueue = new Queue<Prism>();
+            AddHole(new Prism(new Vector3(2, 0, 0), Vector3.UnitX, .1f, 8));
+            /*AddHole(new Prism(new Vector3(1, -.5f, 0), Vector3.UnitX, .1f, 6));
             AddHole(new Prism(new Vector3(1, 0, 1), new Vector3(-1, 0, -1), .1f, 3));
             AddHole(new Prism(new Vector3(0, 2, 0), Vector3.UnitY, .1f, 8));
             AddHole(new Prism(new Vector3(2, .5f, .5f), Vector3.UnitX, .1f, 8));*/
-            AddChipFromWorld(Vector3.Zero, Vector3.UnitY, 1, 1);
+            //AddChipFromWorld(Vector3.Zero, Vector3.UnitY, 1, 1);
         }
-        private void SetModel(VertexPositionNormalTexture[] vertices)
+        private void UpdateModel()
         {
-            modelComponent.Model = new();
-            modelComponent.Model.Meshes.Clear();
-            modelComponent.Model.Materials.Clear();
-            var vertexBuffer = Stride.Graphics.Buffer.Vertex.New(GraphicsDevice, vertices,
-                                                                 GraphicsResourceUsage.Dynamic);
-            int[] indices = new int[vertices.Length];
-            for (int i = 0; i < indices.Length; i++)
-                indices[i] = i;
-            var indexBuffer = Stride.Graphics.Buffer.Index.New(GraphicsDevice, indices);
-
-            var customMesh = new Mesh
-            {
-                Draw = new MeshDraw
-                {
-                    /* Vertex buffer and index buffer setup */
-                    PrimitiveType = PrimitiveType.TriangleList,
-                    DrawCount = indices.Length,
-                    IndexBuffer = new IndexBufferBinding(indexBuffer, true, indices.Length),
-                    VertexBuffers = [new VertexBufferBinding(vertexBuffer,
-                                  VertexPositionNormalTexture.Layout, vertexBuffer.ElementCount)],
-                }
-            };
-            customMesh.MaterialIndex = 0;
-            // add the mesh to the model
-            modelComponent.Model.Meshes.Add(customMesh);
-            //this.vertices = vertices;
-            modelComponent.Model.Materials.Add(material);
+            modelComponent.Model = faceTree.GetModel();
+            modelComponent.Materials[0] = material;
         }
+        
         //TODO: get the vertices back from the mesh
-        private VertexPositionNormalTexture[] ExtractVertices(Model model)
+        /*private VertexPositionNormalTexture[] ExtractVertices(Model model)
         {
             return Cube();
-        }
-        private static VertexPositionNormalTexture[] Cube()
+        }*/
+        private static List<Triangle> Cube()
         {
             List<VertexPositionNormalTexture> res = [];
             var top = Face(new Vector3(-.5f, .5f, -.5f), Quaternion.Identity);
@@ -86,13 +69,20 @@ namespace HolePuncher
             res.AddRange(right);
             res.AddRange(front);
             res.AddRange(rear);
-            return [.. res];
+
+            List<Triangle> verts = [];
+            for(int i = 0; i < res.Count - 2; i += 3)
+            {
+                verts.Add(new Triangle(res[i].Position, res[i + 1].Position, res[i + 2].Position));
+            }
+
+            return verts;
         }
         private static VertexPositionNormalTexture[] Face(Vector3 pos, Quaternion rot)
         {
             VertexPositionNormalTexture[] res = new VertexPositionNormalTexture[6];
 
-            res[0].Position = pos + new Vector3(.01f,0,0);
+            res[0].Position = pos;
             res[1].Position = pos + new Vector3(1, 0, 0);
             res[2].Position = pos + new Vector3(1, 0, 1);
             res[5].Position = pos;
@@ -110,15 +100,24 @@ namespace HolePuncher
         }
         public void AddHole(Prism hole)
         {
-            VertexPositionNormalTexture[] res = HolePunch.PunchHole(vertices, hole);
-            vertices = res;
-            SetModel(res);
+            holeQueue.Enqueue(hole);
+            EvalHoleQueue();
         }
-        public void AddHole(Volume hole)
+        private async void EvalHoleQueue()
         {
-            VertexPositionNormalTexture[] res = HolePunch.PunchHole(vertices, hole);
-            vertices = res;
-            SetModel(res);
+            if (queueLock)
+                return;
+            queueLock = true;
+            await Task.Run(() =>
+            {
+                while (holeQueue.Count > 0)
+                {
+                Prism hole = holeQueue.Dequeue();
+                    faceTree.PunchHole(hole);
+                    UpdateModel();
+                }
+            });
+            queueLock = false;
         }
         public void AddHoleFromWorld(Vector3 pos, Vector3 dir, float radius)
         {
@@ -130,15 +129,6 @@ namespace HolePuncher
             pos -= dir * .1f;
             Prism hole = new(pos, -dir, radius, 6);
             AddHole(hole);
-        }
-        //TODO: move to world space
-        public void AddChipFromWorld(Vector3 pos, Vector3 dir, float width, float depth)
-        {
-            Pyramid hole = new(pos, width, depth);
-            //Cube hole = new(pos, width);
-            //TODO: rotate hole towards dir
-            AddHole(hole);
-            DebugHoleRenderer?.Render(hole);
         }
     }
 }

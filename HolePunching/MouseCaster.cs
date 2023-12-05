@@ -24,7 +24,6 @@ namespace HolePunching
             base.Start();
             model = Entity.Get<ModelComponent>();
             punchQueue = new();
-            EvalQueue();
         }
         public override void Update()
         {
@@ -41,20 +40,8 @@ namespace HolePunching
             var enumerator = punchables.GetEnumerator();
             enumerator.MoveNext();
             Punchable punchable = enumerator.Current;
-            punchQueue.Enqueue((punchable, res.Point, dir, .1f));
-        }
-        private async void EvalQueue()
-        {
-            for(; ; )
-            {
-                await Task.Delay(100);
-                while (punchQueue.Count > 0)
-                {
-                    var (punchable, pos, dir, r) = punchQueue.Dequeue();
-                    //punchable.AddHoleFromWorld(pos, dir, r);
-                    punchable.AddChipFromWorld(pos-new Vector3(1, 1, 1), dir, 3, 3);
-                }
-            }
+            punchable.AddHoleFromWorld(res.Point, dir, .1f);
+            //punchQueue.Enqueue((punchable, res.Point, dir, .02f));
         }
         public static (HitResult,Vector3) ScreenPositionToWorldPositionRaycast(Vector2 screenPos, CameraComponent camera, Simulation simulation)
         {

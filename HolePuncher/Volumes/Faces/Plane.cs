@@ -95,7 +95,7 @@ namespace HolePuncher.Volumes.Faces
         }
         public bool Parallel(Plane other)
         {
-            return Vector3.Cross(normal, other.normal).LengthSquared() <= O*O;
+            return Vector3.Cross(normal, other.normal).LengthSquared() <= O;
         }
         public bool Parallel(Vector3 lineDir)
         {

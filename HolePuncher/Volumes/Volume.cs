@@ -33,6 +33,11 @@ namespace HolePuncher.Volumes
                 max = Vector3.Max(max, points[i]);
             }
         }
+        public readonly float Volume()
+        {
+            Vector3 diff = max - min;
+            return diff.X * diff.Y * diff.Z;
+        }
         public readonly bool Intersects(BoundingBox3D other)
         {
             return min.X <= other.max.X && min.Y <= other.max.Y && min.Z <= other.max.Z
@@ -176,6 +181,60 @@ namespace HolePuncher.Volumes
                 triangles.AddRange(triangulation);
             }
             return Triangle.TrianglesToVertices(triangles);
+        }
+        public bool IntersectsPrism(Prism prism)
+        {
+            foreach(Face face in Faces)
+            {
+                Geometry slice = prism.Slice(face.plane, face.geometry);
+                if (slice != null && face.geometry.Intersects(slice))
+                    return true;
+            }
+            return false;
+        }
+        public bool InsidePrism(Prism prism)
+        {
+            foreach (Face face in Faces)
+            {
+                Geometry slice = prism.Slice(face.plane, face.geometry);
+                if (slice == null || !face.geometry.Difference(slice).IsEmpty)
+                    return false;
+            }
+            return true;
+        }
+        public List<Triangle> Punch(List<Triangle> triangles)
+        {
+            List<Triangle> res = [];
+            foreach (Triangle triangle in triangles)
+                res.AddRange(Punch(triangle));
+            return res;
+        }
+        public List<Triangle> Crop(List<Triangle> triangles)
+        {
+            List<Triangle> res = [];
+            foreach (Triangle triangle in triangles)
+                res.AddRange(Crop(triangle));
+            return res;
+        }
+        //Get area of triangle outside of this volume, then triangularize it
+        private Triangle[] Punch(Triangle triangle)
+        {
+            if (!BoundingBox.Intersects(triangle.BoundingBox))
+                return [triangle];
+            Geometry holeSlice = Slice(triangle.plane);
+            if (holeSlice != null && !holeSlice.IsEmpty)
+                holeSlice = holeSlice.GetGeometryN(0);
+            return HolePunch.Punch(triangle, holeSlice);
+        }
+        //Get area inside this volume, then triangularize it
+        private Triangle[] Crop(Triangle triangle)
+        {
+            if (!BoundingBox.Intersects(triangle.BoundingBox))
+                return [];
+            Geometry holeSlice = Slice(triangle.plane);
+            if (holeSlice != null && !holeSlice.IsEmpty)
+                holeSlice = holeSlice.GetGeometryN(0);
+            return HolePunch.Crop(triangle, holeSlice);
         }
     }
 }

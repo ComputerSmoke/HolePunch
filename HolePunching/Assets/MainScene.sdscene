@@ -9,9 +9,20 @@ Hierarchy:
         - ref!! 6335cc42-0af1-4a9a-b89b-435a2ea19702
         - ref!! cb3de8b7-68f6-4c31-8c92-f892972dc63f
         - ref!! 038ecfdc-4e70-4b7c-82be-2be72b370a27
+        - ref!! e1cf866a-3414-4942-9572-c43ed58a1a9c
         - ref!! e19fe105-07f3-4cb6-9ef4-93f81d1e870c
         - ref!! 2928c24d-2d68-42f8-bcd8-e26d30622146
-        - ref!! e1cf866a-3414-4942-9572-c43ed58a1a9c
+        - ref!! 8605af3a-8139-44b1-b02b-76e52852cdb9
+        - ref!! 48e36eae-e724-4760-a971-667e352e1c8f
+        - ref!! 081d5379-aee8-45e0-a62a-007bd030db4a
+        - ref!! 54571d87-5308-4708-9302-bbfdafb21da3
+        - ref!! aa7301e3-9382-495b-926f-35e233a0c32b
+        - ref!! 5d0ae920-6310-447c-8da2-b3193774823d
+        - ref!! b9aee2e0-10b2-4f2c-9974-c2b3b2711366
+        - ref!! 9284a6ba-80cf-4c2a-b28e-39a816aec721
+        - ref!! 92f25cf4-4ccc-4054-b2e5-562eae29dfc7
+        - ref!! 2d15a45c-f8f3-4138-8244-e3b33e391602
+        - ref!! 880a53f9-6342-4fcc-923e-16952b4617c7
     Parts:
         -   Entity:
                 Id: 038ecfdc-4e70-4b7c-82be-2be72b370a27
@@ -30,6 +41,49 @@ Hierarchy:
                         Id: 0726f1fe-9bd5-4a29-b369-7217002f97ae
                         Type: !LightSkybox
                             Skybox: 93b06e4b-e788-4661-b027-acb6ea92b532:Skybox
+        -   Entity:
+                Id: 081d5379-aee8-45e0-a62a-007bd030db4a
+                Name: Sphere
+                Components:
+                    c32545b3f44cadfb0cc54f4c696d883c: !TransformComponent
+                        Id: 467ce2aa-cb1a-474e-9c9e-093a422f0932
+                        Position: {X: 3.6273007, Y: 0.5, Z: -1.4681604}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children:
+                            d9e3b31e231fbbc780032898d058ca57: ref!! b9d59654-8edd-4fec-bbd2-d562a70346f8
+                    8ad9b664a80ce7a4ffc4f12020b33d68: !ModelComponent
+                        Id: 41118614-d369-4126-a168-beae55fb2ea8
+                        Model: 7bcad567-5181-4317-9d44-15c03af5f87c:Sphere
+                        Materials:
+                            fc8377c48785ab704fc087e6fbada49c~0: 273d0317-0c94-41e7-9f48-fecb21a81e1d:Sphere Material
+                    4499d96a826f9712625d7bf2afc68f3c: !HolePuncher.Punchable,HolePuncher
+                        Id: d530d5b1-804a-44fc-a8a2-a5d9517fc15a
+                        DebugHoleRenderer: ref!! 185a0c62-66b3-45d8-b07d-0fb83a84d98b
+                        VertsPerNode: 200
+                        MinNodeVolume: 1E-06
+                    15a9b5d28f5c80f16bc17d06bb3d80de: !RigidbodyComponent
+                        Id: 9f12f66c-aae3-459a-a5bf-07661ee2d945
+                        CanSleep: false
+                        Restitution: 0.0
+                        Friction: 0.5
+                        RollingFriction: 0.0
+                        CcdMotionThreshold: 0.0
+                        CcdSweptSphereRadius: 0.0
+                        IsTrigger: false
+                        IsKinematic: true
+                        Mass: 1.0
+                        LinearDamping: 0.0
+                        AngularDamping: 0.0
+                        OverrideGravity: false
+                        Gravity: {X: 0.0, Y: 0.0, Z: 0.0}
+                        NodeName: null
+                        ColliderShapes:
+                            92722c3bf3da1b9e0417c544d7f7bef9: !BoxColliderShapeDesc
+                                Is2D: false
+                                Size: {X: 1.0, Y: 1.0, Z: 1.0}
+                                LocalOffset: {X: 0.0, Y: 0.0, Z: 0.0}
+                                LocalRotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
         -   Entity:
                 Id: 233a650a-dc16-44fb-8471-b04ce84b7de2
                 Name: holeRenderer
@@ -64,6 +118,229 @@ Hierarchy:
                         Id: 0003204f-ac95-4a2e-9f7c-e7dd795fcda6
                         Camera: ref!! b8e82e56-8be5-4b13-a4dc-f9fb058762b4
         -   Entity:
+                Id: 2d15a45c-f8f3-4138-8244-e3b33e391602
+                Name: Sphere
+                Components:
+                    c32545b3f44cadfb0cc54f4c696d883c: !TransformComponent
+                        Id: 299d441f-4f2a-43ac-96dd-1d63e187f681
+                        Position: {X: 6.947939, Y: 0.5, Z: -5.0237365}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children:
+                            d9e3b31e231fbbc780032898d058ca57: ref!! 963419a3-664a-49f8-af30-179eccdc549e
+                    8ad9b664a80ce7a4ffc4f12020b33d68: !ModelComponent
+                        Id: dbad2a9c-7f0a-4dc4-ad07-bd86b374ac58
+                        Model: 7bcad567-5181-4317-9d44-15c03af5f87c:Sphere
+                        Materials:
+                            fc8377c48785ab704fc087e6fbada49c~0: 273d0317-0c94-41e7-9f48-fecb21a81e1d:Sphere Material
+                    4499d96a826f9712625d7bf2afc68f3c: !HolePuncher.Punchable,HolePuncher
+                        Id: d126e5bd-5b3f-4468-8fa4-1dcdf4de0ec7
+                        DebugHoleRenderer: ref!! 86b6abd6-bca1-4353-8d5a-689b6acff8f0
+                        VertsPerNode: 50
+                        MinNodeVolume: 0.001
+                    15a9b5d28f5c80f16bc17d06bb3d80de: !RigidbodyComponent
+                        Id: 83cc1e8c-04a0-4045-8391-a3a3c99a560e
+                        CanSleep: false
+                        Restitution: 0.0
+                        Friction: 0.5
+                        RollingFriction: 0.0
+                        CcdMotionThreshold: 0.0
+                        CcdSweptSphereRadius: 0.0
+                        IsTrigger: false
+                        IsKinematic: true
+                        Mass: 1.0
+                        LinearDamping: 0.0
+                        AngularDamping: 0.0
+                        OverrideGravity: false
+                        Gravity: {X: 0.0, Y: 0.0, Z: 0.0}
+                        NodeName: null
+                        ColliderShapes:
+                            92722c3bf3da1b9e0417c544d7f7bef9: !BoxColliderShapeDesc
+                                Is2D: false
+                                Size: {X: 1.0, Y: 1.0, Z: 1.0}
+                                LocalOffset: {X: 0.0, Y: 0.0, Z: 0.0}
+                                LocalRotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+        -   Folder: null
+            Entity:
+                Id: 3070601b-4d39-4b9b-a9ad-002d1af3c56e
+                Name: holeRenderer
+                Components:
+                    08439ac859ff99dff35abc270fd5b8e1: !TransformComponent
+                        Id: 8ad899f8-aa1c-4059-8974-f762e6076bf0
+                        Position: {X: 0.0, Y: 0.0, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    2ac1b024589be46451958e9a21bcb1e4: !HolePuncher.Volumes.VolumeRenderer,HolePuncher
+                        Id: 9fdeaafa-21ae-45ce-b3cb-627bf4b17c5d
+                    5f8d24170c974d634221a769c795d19f: !ModelComponent
+                        Id: ae14fad0-fee6-455f-96c7-3c62240e0fcc
+                        Model: null
+                        Materials: {}
+        -   Folder: null
+            Entity:
+                Id: 3fe9e1a7-3ccb-4493-b0ba-0c58d88ea26a
+                Name: holeRenderer
+                Components:
+                    08439ac859ff99dff35abc270fd5b8e1: !TransformComponent
+                        Id: b9d59654-8edd-4fec-bbd2-d562a70346f8
+                        Position: {X: 0.0, Y: 0.0, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    2ac1b024589be46451958e9a21bcb1e4: !HolePuncher.Volumes.VolumeRenderer,HolePuncher
+                        Id: 185a0c62-66b3-45d8-b07d-0fb83a84d98b
+                    5f8d24170c974d634221a769c795d19f: !ModelComponent
+                        Id: 0c384f60-23f6-4d30-a2fc-362c6b0a1151
+                        Model: null
+                        Materials: {}
+        -   Entity:
+                Id: 48e36eae-e724-4760-a971-667e352e1c8f
+                Name: Sphere
+                Components:
+                    c32545b3f44cadfb0cc54f4c696d883c: !TransformComponent
+                        Id: 443839c6-0a58-4c88-82f7-7c0090f038a6
+                        Position: {X: 1.7553351, Y: 0.5, Z: -1.4681604}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children:
+                            d9e3b31e231fbbc780032898d058ca57: ref!! 1ede3dcc-233f-4802-ade4-6bb6926d12cc
+                    8ad9b664a80ce7a4ffc4f12020b33d68: !ModelComponent
+                        Id: cf7700b0-9680-4503-8c1e-03f5a1365c52
+                        Model: 7bcad567-5181-4317-9d44-15c03af5f87c:Sphere
+                        Materials:
+                            fc8377c48785ab704fc087e6fbada49c~0: 273d0317-0c94-41e7-9f48-fecb21a81e1d:Sphere Material
+                    4499d96a826f9712625d7bf2afc68f3c: !HolePuncher.Punchable,HolePuncher
+                        Id: c1260ba2-b9bd-4916-96ae-882b26e16d71
+                        DebugHoleRenderer: ref!! c62c6b71-7e00-4c2d-b016-cfe1281c8bde
+                        VertsPerNode: 400
+                        MinNodeVolume: 1E-06
+                    15a9b5d28f5c80f16bc17d06bb3d80de: !RigidbodyComponent
+                        Id: 7db782e2-aea5-42a4-be90-934464254e8c
+                        CanSleep: false
+                        Restitution: 0.0
+                        Friction: 0.5
+                        RollingFriction: 0.0
+                        CcdMotionThreshold: 0.0
+                        CcdSweptSphereRadius: 0.0
+                        IsTrigger: false
+                        IsKinematic: true
+                        Mass: 1.0
+                        LinearDamping: 0.0
+                        AngularDamping: 0.0
+                        OverrideGravity: false
+                        Gravity: {X: 0.0, Y: 0.0, Z: 0.0}
+                        NodeName: null
+                        ColliderShapes:
+                            92722c3bf3da1b9e0417c544d7f7bef9: !BoxColliderShapeDesc
+                                Is2D: false
+                                Size: {X: 1.0, Y: 1.0, Z: 1.0}
+                                LocalOffset: {X: 0.0, Y: 0.0, Z: 0.0}
+                                LocalRotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+        -   Entity:
+                Id: 54571d87-5308-4708-9302-bbfdafb21da3
+                Name: Sphere
+                Components:
+                    c32545b3f44cadfb0cc54f4c696d883c: !TransformComponent
+                        Id: bf6279e1-f5eb-4131-af34-880eb3c2319d
+                        Position: {X: 5.4293084, Y: 0.5, Z: -1.4681604}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children:
+                            d9e3b31e231fbbc780032898d058ca57: ref!! 22cd5f3d-b435-4147-9364-4975652d85b9
+                    8ad9b664a80ce7a4ffc4f12020b33d68: !ModelComponent
+                        Id: e97614f1-5cef-4388-aa67-7bb196cf0816
+                        Model: 7bcad567-5181-4317-9d44-15c03af5f87c:Sphere
+                        Materials:
+                            fc8377c48785ab704fc087e6fbada49c~0: 273d0317-0c94-41e7-9f48-fecb21a81e1d:Sphere Material
+                    4499d96a826f9712625d7bf2afc68f3c: !HolePuncher.Punchable,HolePuncher
+                        Id: ba90f3ca-c0ea-408f-b600-c78080f9fce1
+                        DebugHoleRenderer: ref!! b2e18afc-8b1d-42ca-bd2b-9b6532ff3aa1
+                        VertsPerNode: 100
+                        MinNodeVolume: 1E-06
+                    15a9b5d28f5c80f16bc17d06bb3d80de: !RigidbodyComponent
+                        Id: 3cf92fbe-42e6-4ed6-9206-31184239711a
+                        CanSleep: false
+                        Restitution: 0.0
+                        Friction: 0.5
+                        RollingFriction: 0.0
+                        CcdMotionThreshold: 0.0
+                        CcdSweptSphereRadius: 0.0
+                        IsTrigger: false
+                        IsKinematic: true
+                        Mass: 1.0
+                        LinearDamping: 0.0
+                        AngularDamping: 0.0
+                        OverrideGravity: false
+                        Gravity: {X: 0.0, Y: 0.0, Z: 0.0}
+                        NodeName: null
+                        ColliderShapes:
+                            92722c3bf3da1b9e0417c544d7f7bef9: !BoxColliderShapeDesc
+                                Is2D: false
+                                Size: {X: 1.0, Y: 1.0, Z: 1.0}
+                                LocalOffset: {X: 0.0, Y: 0.0, Z: 0.0}
+                                LocalRotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+        -   Folder: null
+            Entity:
+                Id: 5581cea8-e493-4050-9ff8-f34fda3760bf
+                Name: holeRenderer
+                Components:
+                    08439ac859ff99dff35abc270fd5b8e1: !TransformComponent
+                        Id: 1ede3dcc-233f-4802-ade4-6bb6926d12cc
+                        Position: {X: 0.0, Y: 0.0, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    2ac1b024589be46451958e9a21bcb1e4: !HolePuncher.Volumes.VolumeRenderer,HolePuncher
+                        Id: c62c6b71-7e00-4c2d-b016-cfe1281c8bde
+                    5f8d24170c974d634221a769c795d19f: !ModelComponent
+                        Id: fe6b654e-de5d-45a7-9526-9fc6ded59cdb
+                        Model: null
+                        Materials: {}
+        -   Entity:
+                Id: 5d0ae920-6310-447c-8da2-b3193774823d
+                Name: Sphere
+                Components:
+                    c32545b3f44cadfb0cc54f4c696d883c: !TransformComponent
+                        Id: 958ed2eb-6908-4800-b064-03d612ff480e
+                        Position: {X: 5.4293084, Y: 0.5, Z: -3.3114343}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children:
+                            d9e3b31e231fbbc780032898d058ca57: ref!! f52af15a-2248-48b8-b5ba-64d9e335f18b
+                    8ad9b664a80ce7a4ffc4f12020b33d68: !ModelComponent
+                        Id: 7890203f-4a50-4fa8-903e-2ef15008fe65
+                        Model: 7bcad567-5181-4317-9d44-15c03af5f87c:Sphere
+                        Materials:
+                            fc8377c48785ab704fc087e6fbada49c~0: 273d0317-0c94-41e7-9f48-fecb21a81e1d:Sphere Material
+                    4499d96a826f9712625d7bf2afc68f3c: !HolePuncher.Punchable,HolePuncher
+                        Id: 1c511ff2-36f7-4ecb-915a-05674cd4449e
+                        DebugHoleRenderer: ref!! 7b57b676-68b1-483b-9f12-42836abf3ade
+                        VertsPerNode: 100
+                        MinNodeVolume: 0.0001
+                    15a9b5d28f5c80f16bc17d06bb3d80de: !RigidbodyComponent
+                        Id: 7d79cf30-4e70-4832-a7a7-754db8ed53b0
+                        CanSleep: false
+                        Restitution: 0.0
+                        Friction: 0.5
+                        RollingFriction: 0.0
+                        CcdMotionThreshold: 0.0
+                        CcdSweptSphereRadius: 0.0
+                        IsTrigger: false
+                        IsKinematic: true
+                        Mass: 1.0
+                        LinearDamping: 0.0
+                        AngularDamping: 0.0
+                        OverrideGravity: false
+                        Gravity: {X: 0.0, Y: 0.0, Z: 0.0}
+                        NodeName: null
+                        ColliderShapes:
+                            92722c3bf3da1b9e0417c544d7f7bef9: !BoxColliderShapeDesc
+                                Is2D: false
+                                Size: {X: 1.0, Y: 1.0, Z: 1.0}
+                                LocalOffset: {X: 0.0, Y: 0.0, Z: 0.0}
+                                LocalRotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+        -   Entity:
                 Id: 6335cc42-0af1-4a9a-b89b-435a2ea19702
                 Name: Camera
                 Components:
@@ -87,6 +364,358 @@ Hierarchy:
                         KeyboardRotationSpeed: {X: 3.0, Y: 3.0}
                         MouseRotationSpeed: {X: 1.0, Y: 1.0}
                         TouchRotationSpeed: {X: 1.0, Y: 0.7}
+        -   Folder: null
+            Entity:
+                Id: 68a4568e-cf89-4751-9cb6-2653cc31d72b
+                Name: holeRenderer
+                Components:
+                    08439ac859ff99dff35abc270fd5b8e1: !TransformComponent
+                        Id: 56a5b117-e043-460a-8a16-01fd94ae8760
+                        Position: {X: 0.0, Y: 0.0, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    2ac1b024589be46451958e9a21bcb1e4: !HolePuncher.Volumes.VolumeRenderer,HolePuncher
+                        Id: 768f64ca-5cbe-4aa3-877e-6011ebf71d09
+                    5f8d24170c974d634221a769c795d19f: !ModelComponent
+                        Id: 4a17bddb-4947-4cfd-939c-aa4f89fa275f
+                        Model: null
+                        Materials: {}
+        -   Folder: null
+            Entity:
+                Id: 710dd70f-9b77-4093-adb9-35dd142bf75f
+                Name: holeRenderer
+                Components:
+                    08439ac859ff99dff35abc270fd5b8e1: !TransformComponent
+                        Id: f52af15a-2248-48b8-b5ba-64d9e335f18b
+                        Position: {X: 0.0, Y: 0.0, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    2ac1b024589be46451958e9a21bcb1e4: !HolePuncher.Volumes.VolumeRenderer,HolePuncher
+                        Id: 7b57b676-68b1-483b-9f12-42836abf3ade
+                    5f8d24170c974d634221a769c795d19f: !ModelComponent
+                        Id: 9d001d66-0c51-423b-98dc-072eb20277e5
+                        Model: null
+                        Materials: {}
+        -   Folder: null
+            Entity:
+                Id: 787186c2-ff52-4796-9f98-6820ab16d0cc
+                Name: holeRenderer
+                Components:
+                    08439ac859ff99dff35abc270fd5b8e1: !TransformComponent
+                        Id: 22cd5f3d-b435-4147-9364-4975652d85b9
+                        Position: {X: 0.0, Y: 0.0, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    2ac1b024589be46451958e9a21bcb1e4: !HolePuncher.Volumes.VolumeRenderer,HolePuncher
+                        Id: b2e18afc-8b1d-42ca-bd2b-9b6532ff3aa1
+                    5f8d24170c974d634221a769c795d19f: !ModelComponent
+                        Id: 8dbc5c52-74b9-4892-b537-936efb3b015e
+                        Model: null
+                        Materials: {}
+        -   Entity:
+                Id: 8605af3a-8139-44b1-b02b-76e52852cdb9
+                Name: BoxTest
+                Components:
+                    5aa897b10fe56343c7f4ea7a28826971: !TransformComponent
+                        Id: a58f74ee-a310-423e-b53b-2b487a7ba1bf
+                        Position: {X: 0.0, Y: 0.0, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    af2bd57c1948bc53061bb612d0fafec7: !HolePuncher.Volumes.BoxRenderer,HolePuncher
+                        Id: a0bd647e-d68c-449c-9c48-7fea7f5c8891
+                        v0: {X: 0.0, Y: 0.0, Z: 0.0}
+                        v1: {X: 1.0, Y: 1.0, Z: 1.0}
+                    9a65baa26de72ddb79884ff301108b48: !ModelComponent
+                        Id: 530f63c9-a034-4363-a545-fb83e6dde239
+                        Model: null
+                        Materials: {}
+        -   Entity:
+                Id: 880a53f9-6342-4fcc-923e-16952b4617c7
+                Name: Sphere
+                Components:
+                    c32545b3f44cadfb0cc54f4c696d883c: !TransformComponent
+                        Id: 26315c4d-7f84-4b2c-a392-95b26c5f36ed
+                        Position: {X: 5.4293084, Y: 0.5, Z: -5.0689373}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children:
+                            d9e3b31e231fbbc780032898d058ca57: ref!! 56a5b117-e043-460a-8a16-01fd94ae8760
+                    8ad9b664a80ce7a4ffc4f12020b33d68: !ModelComponent
+                        Id: 4b5d2edf-ffa1-4eb4-91c7-f027fdbfb62d
+                        Model: 7bcad567-5181-4317-9d44-15c03af5f87c:Sphere
+                        Materials:
+                            fc8377c48785ab704fc087e6fbada49c~0: 273d0317-0c94-41e7-9f48-fecb21a81e1d:Sphere Material
+                    4499d96a826f9712625d7bf2afc68f3c: !HolePuncher.Punchable,HolePuncher
+                        Id: 8dad961e-04b9-446f-9a7a-2c0fb0ee8724
+                        DebugHoleRenderer: ref!! 768f64ca-5cbe-4aa3-877e-6011ebf71d09
+                        VertsPerNode: 100
+                        MinNodeVolume: 0.001
+                    15a9b5d28f5c80f16bc17d06bb3d80de: !RigidbodyComponent
+                        Id: aac94558-3565-45ec-949a-60635f83fc1e
+                        CanSleep: false
+                        Restitution: 0.0
+                        Friction: 0.5
+                        RollingFriction: 0.0
+                        CcdMotionThreshold: 0.0
+                        CcdSweptSphereRadius: 0.0
+                        IsTrigger: false
+                        IsKinematic: true
+                        Mass: 1.0
+                        LinearDamping: 0.0
+                        AngularDamping: 0.0
+                        OverrideGravity: false
+                        Gravity: {X: 0.0, Y: 0.0, Z: 0.0}
+                        NodeName: null
+                        ColliderShapes:
+                            92722c3bf3da1b9e0417c544d7f7bef9: !BoxColliderShapeDesc
+                                Is2D: false
+                                Size: {X: 1.0, Y: 1.0, Z: 1.0}
+                                LocalOffset: {X: 0.0, Y: 0.0, Z: 0.0}
+                                LocalRotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+        -   Folder: null
+            Entity:
+                Id: 8bf08036-6922-4fba-932d-d62c8a2831b0
+                Name: holeRenderer
+                Components:
+                    08439ac859ff99dff35abc270fd5b8e1: !TransformComponent
+                        Id: cf9faee2-368b-4d6a-9b50-a65a357664a3
+                        Position: {X: 0.0, Y: 0.0, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    2ac1b024589be46451958e9a21bcb1e4: !HolePuncher.Volumes.VolumeRenderer,HolePuncher
+                        Id: ef612587-762b-4577-b529-691ab8ae5cb8
+                    5f8d24170c974d634221a769c795d19f: !ModelComponent
+                        Id: 76e91dd2-042d-4f56-849a-c536200b4dd3
+                        Model: null
+                        Materials: {}
+        -   Folder: null
+            Entity:
+                Id: 8d289ec4-82fe-4921-8a6e-88ae1df595ba
+                Name: holeRenderer
+                Components:
+                    08439ac859ff99dff35abc270fd5b8e1: !TransformComponent
+                        Id: 963419a3-664a-49f8-af30-179eccdc549e
+                        Position: {X: 0.0, Y: 0.0, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    2ac1b024589be46451958e9a21bcb1e4: !HolePuncher.Volumes.VolumeRenderer,HolePuncher
+                        Id: 86b6abd6-bca1-4353-8d5a-689b6acff8f0
+                    5f8d24170c974d634221a769c795d19f: !ModelComponent
+                        Id: c00727f6-e7b9-4104-89e4-578939fa37bf
+                        Model: null
+                        Materials: {}
+        -   Entity:
+                Id: 9284a6ba-80cf-4c2a-b28e-39a816aec721
+                Name: Sphere
+                Components:
+                    c32545b3f44cadfb0cc54f4c696d883c: !TransformComponent
+                        Id: 04fc2770-d33e-4e4b-ad83-aaaf0d0ac2a2
+                        Position: {X: 3.6529193, Y: 0.5, Z: -3.392347}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children:
+                            d9e3b31e231fbbc780032898d058ca57: ref!! 1298f8bf-ec9a-40a5-bda7-b2d0dd75a75c
+                    8ad9b664a80ce7a4ffc4f12020b33d68: !ModelComponent
+                        Id: 094bd35a-94f6-404d-a966-29eff21f97f6
+                        Model: 7bcad567-5181-4317-9d44-15c03af5f87c:Sphere
+                        Materials:
+                            fc8377c48785ab704fc087e6fbada49c~0: 273d0317-0c94-41e7-9f48-fecb21a81e1d:Sphere Material
+                    4499d96a826f9712625d7bf2afc68f3c: !HolePuncher.Punchable,HolePuncher
+                        Id: a665d265-5041-40e2-b83d-9c2b694971ed
+                        DebugHoleRenderer: ref!! 24ec6355-777d-472f-972d-826f4aa5c4df
+                        VertsPerNode: 200
+                        MinNodeVolume: 0.0001
+                    15a9b5d28f5c80f16bc17d06bb3d80de: !RigidbodyComponent
+                        Id: 84106a3f-4881-44d4-ba10-23d2bd8e49ea
+                        CanSleep: false
+                        Restitution: 0.0
+                        Friction: 0.5
+                        RollingFriction: 0.0
+                        CcdMotionThreshold: 0.0
+                        CcdSweptSphereRadius: 0.0
+                        IsTrigger: false
+                        IsKinematic: true
+                        Mass: 1.0
+                        LinearDamping: 0.0
+                        AngularDamping: 0.0
+                        OverrideGravity: false
+                        Gravity: {X: 0.0, Y: 0.0, Z: 0.0}
+                        NodeName: null
+                        ColliderShapes:
+                            92722c3bf3da1b9e0417c544d7f7bef9: !BoxColliderShapeDesc
+                                Is2D: false
+                                Size: {X: 1.0, Y: 1.0, Z: 1.0}
+                                LocalOffset: {X: 0.0, Y: 0.0, Z: 0.0}
+                                LocalRotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+        -   Entity:
+                Id: 92f25cf4-4ccc-4054-b2e5-562eae29dfc7
+                Name: Sphere
+                Components:
+                    c32545b3f44cadfb0cc54f4c696d883c: !TransformComponent
+                        Id: 42134784-bde8-4768-9210-15afdb2aa6c9
+                        Position: {X: 3.6529193, Y: 0.5, Z: -5.099594}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children:
+                            d9e3b31e231fbbc780032898d058ca57: ref!! 8ad899f8-aa1c-4059-8974-f762e6076bf0
+                    8ad9b664a80ce7a4ffc4f12020b33d68: !ModelComponent
+                        Id: 8d210c6e-1191-43a2-b750-2bb3028a24a1
+                        Model: 7bcad567-5181-4317-9d44-15c03af5f87c:Sphere
+                        Materials:
+                            fc8377c48785ab704fc087e6fbada49c~0: 273d0317-0c94-41e7-9f48-fecb21a81e1d:Sphere Material
+                    4499d96a826f9712625d7bf2afc68f3c: !HolePuncher.Punchable,HolePuncher
+                        Id: 1d18f6c1-8832-41c0-bbd0-cee3004a8c27
+                        DebugHoleRenderer: ref!! 9fdeaafa-21ae-45ce-b3cb-627bf4b17c5d
+                        VertsPerNode: 200
+                        MinNodeVolume: 0.001
+                    15a9b5d28f5c80f16bc17d06bb3d80de: !RigidbodyComponent
+                        Id: e26e25dd-eeee-4a85-8cd7-596e1c98b224
+                        CanSleep: false
+                        Restitution: 0.0
+                        Friction: 0.5
+                        RollingFriction: 0.0
+                        CcdMotionThreshold: 0.0
+                        CcdSweptSphereRadius: 0.0
+                        IsTrigger: false
+                        IsKinematic: true
+                        Mass: 1.0
+                        LinearDamping: 0.0
+                        AngularDamping: 0.0
+                        OverrideGravity: false
+                        Gravity: {X: 0.0, Y: 0.0, Z: 0.0}
+                        NodeName: null
+                        ColliderShapes:
+                            92722c3bf3da1b9e0417c544d7f7bef9: !BoxColliderShapeDesc
+                                Is2D: false
+                                Size: {X: 1.0, Y: 1.0, Z: 1.0}
+                                LocalOffset: {X: 0.0, Y: 0.0, Z: 0.0}
+                                LocalRotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+        -   Entity:
+                Id: aa7301e3-9382-495b-926f-35e233a0c32b
+                Name: Sphere
+                Components:
+                    c32545b3f44cadfb0cc54f4c696d883c: !TransformComponent
+                        Id: b47976db-f45a-4fa0-941f-eaa6b17bcbcc
+                        Position: {X: 6.947939, Y: 0.5, Z: -1.4681604}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children:
+                            d9e3b31e231fbbc780032898d058ca57: ref!! 91da6980-1ada-401b-a0b2-d8e875e36e90
+                    8ad9b664a80ce7a4ffc4f12020b33d68: !ModelComponent
+                        Id: 06b4c8e9-c28f-4407-a01e-0d474abfbc2f
+                        Model: 7bcad567-5181-4317-9d44-15c03af5f87c:Sphere
+                        Materials:
+                            fc8377c48785ab704fc087e6fbada49c~0: 273d0317-0c94-41e7-9f48-fecb21a81e1d:Sphere Material
+                    4499d96a826f9712625d7bf2afc68f3c: !HolePuncher.Punchable,HolePuncher
+                        Id: 58adf4bb-b43f-49f3-ad36-e45257132f73
+                        DebugHoleRenderer: ref!! 42baf1a1-90ee-4dce-8f6a-6ee6104b0860
+                        VertsPerNode: 50
+                        MinNodeVolume: 1E-06
+                    15a9b5d28f5c80f16bc17d06bb3d80de: !RigidbodyComponent
+                        Id: 588fa871-3a4b-484c-a35a-14cd7277f663
+                        CanSleep: false
+                        Restitution: 0.0
+                        Friction: 0.5
+                        RollingFriction: 0.0
+                        CcdMotionThreshold: 0.0
+                        CcdSweptSphereRadius: 0.0
+                        IsTrigger: false
+                        IsKinematic: true
+                        Mass: 1.0
+                        LinearDamping: 0.0
+                        AngularDamping: 0.0
+                        OverrideGravity: false
+                        Gravity: {X: 0.0, Y: 0.0, Z: 0.0}
+                        NodeName: null
+                        ColliderShapes:
+                            92722c3bf3da1b9e0417c544d7f7bef9: !BoxColliderShapeDesc
+                                Is2D: false
+                                Size: {X: 1.0, Y: 1.0, Z: 1.0}
+                                LocalOffset: {X: 0.0, Y: 0.0, Z: 0.0}
+                                LocalRotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+        -   Folder: null
+            Entity:
+                Id: b9174702-b9f3-4194-9424-2a58255e1f4b
+                Name: holeRenderer
+                Components:
+                    08439ac859ff99dff35abc270fd5b8e1: !TransformComponent
+                        Id: 91da6980-1ada-401b-a0b2-d8e875e36e90
+                        Position: {X: 0.0, Y: 0.0, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    2ac1b024589be46451958e9a21bcb1e4: !HolePuncher.Volumes.VolumeRenderer,HolePuncher
+                        Id: 42baf1a1-90ee-4dce-8f6a-6ee6104b0860
+                    5f8d24170c974d634221a769c795d19f: !ModelComponent
+                        Id: 230fc95b-4273-4aee-a57e-0858c6ed51e3
+                        Model: null
+                        Materials: {}
+        -   Entity:
+                Id: b9aee2e0-10b2-4f2c-9974-c2b3b2711366
+                Name: Sphere
+                Components:
+                    c32545b3f44cadfb0cc54f4c696d883c: !TransformComponent
+                        Id: ea948f1a-6809-456f-ae95-965c5f489d12
+                        Position: {X: 6.947939, Y: 0.5, Z: -3.3368485}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children:
+                            d9e3b31e231fbbc780032898d058ca57: ref!! cf9faee2-368b-4d6a-9b50-a65a357664a3
+                    8ad9b664a80ce7a4ffc4f12020b33d68: !ModelComponent
+                        Id: bc67c4a9-994f-430f-ace1-7a11004c2539
+                        Model: 7bcad567-5181-4317-9d44-15c03af5f87c:Sphere
+                        Materials:
+                            fc8377c48785ab704fc087e6fbada49c~0: 273d0317-0c94-41e7-9f48-fecb21a81e1d:Sphere Material
+                    4499d96a826f9712625d7bf2afc68f3c: !HolePuncher.Punchable,HolePuncher
+                        Id: 5c988018-23e5-4bb0-9e0c-a32718469dce
+                        DebugHoleRenderer: ref!! ef612587-762b-4577-b529-691ab8ae5cb8
+                        VertsPerNode: 50
+                        MinNodeVolume: 0.0001
+                    15a9b5d28f5c80f16bc17d06bb3d80de: !RigidbodyComponent
+                        Id: 8ade5a4d-44e3-4925-8f79-6f834b25079a
+                        CanSleep: false
+                        Restitution: 0.0
+                        Friction: 0.5
+                        RollingFriction: 0.0
+                        CcdMotionThreshold: 0.0
+                        CcdSweptSphereRadius: 0.0
+                        IsTrigger: false
+                        IsKinematic: true
+                        Mass: 1.0
+                        LinearDamping: 0.0
+                        AngularDamping: 0.0
+                        OverrideGravity: false
+                        Gravity: {X: 0.0, Y: 0.0, Z: 0.0}
+                        NodeName: null
+                        ColliderShapes:
+                            92722c3bf3da1b9e0417c544d7f7bef9: !BoxColliderShapeDesc
+                                Is2D: false
+                                Size: {X: 1.0, Y: 1.0, Z: 1.0}
+                                LocalOffset: {X: 0.0, Y: 0.0, Z: 0.0}
+                                LocalRotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+        -   Folder: null
+            Entity:
+                Id: c644188b-db03-4d42-8cd5-6dbe9ff7be14
+                Name: holeRenderer
+                Components:
+                    08439ac859ff99dff35abc270fd5b8e1: !TransformComponent
+                        Id: 1298f8bf-ec9a-40a5-bda7-b2d0dd75a75c
+                        Position: {X: 0.0, Y: 0.0, Z: 0.0}
+                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
+                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
+                        Children: {}
+                    2ac1b024589be46451958e9a21bcb1e4: !HolePuncher.Volumes.VolumeRenderer,HolePuncher
+                        Id: 24ec6355-777d-472f-972d-826f4aa5c4df
+                    5f8d24170c974d634221a769c795d19f: !ModelComponent
+                        Id: 71aa4122-1bb2-4972-ad86-f32570131749
+                        Model: null
+                        Materials: {}
         -   Entity:
                 Id: cb3de8b7-68f6-4c31-8c92-f892972dc63f
                 Name: Directional light
@@ -118,7 +747,7 @@ Hierarchy:
                 Components:
                     c32545b3f44cadfb0cc54f4c696d883c: !TransformComponent
                         Id: d4cb82c1-fb1b-4ddb-9076-20c46ec8da79
-                        Position: {X: 0.0, Y: 0.5, Z: 0.0}
+                        Position: {X: 0.0, Y: 0.5, Z: -1.4681604}
                         Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children:
@@ -131,6 +760,8 @@ Hierarchy:
                     4499d96a826f9712625d7bf2afc68f3c: !HolePuncher.Punchable,HolePuncher
                         Id: fde3f06b-42e9-4436-a229-60ab04a50d6b
                         DebugHoleRenderer: ref!! f1f88564-9c04-42aa-919c-01e52cd9652d
+                        VertsPerNode: 800
+                        MinNodeVolume: 1E-06
                     15a9b5d28f5c80f16bc17d06bb3d80de: !RigidbodyComponent
                         Id: 87959ee4-5b5b-4e1f-97c6-d634828abb5e
                         CanSleep: false
@@ -159,7 +790,7 @@ Hierarchy:
                 Components:
                     c32545b3f44cadfb0cc54f4c696d883c: !TransformComponent
                         Id: 8fa283d5-5534-4c18-b400-761b5bb240af
-                        Position: {X: -1.7306765, Y: 0.5, Z: 1.8777928}
+                        Position: {X: -1.7306765, Y: 0.5, Z: -1.2996774}
                         Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
@@ -171,6 +802,8 @@ Hierarchy:
                     4499d96a826f9712625d7bf2afc68f3c: !HolePuncher.Punchable,HolePuncher
                         Id: 0e4c34df-933e-43e1-8497-1dff269e6af3
                         DebugHoleRenderer: null
+                        VertsPerNode: 10000000
+                        MinNodeVolume: 1E-06
                     15a9b5d28f5c80f16bc17d06bb3d80de: !RigidbodyComponent
                         Id: 1520db73-cbef-47ca-b0aa-7f7967bf35ca
                         CanSleep: false
