@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using HolePuncher.Volumes.Faces;
 
 namespace HolePuncher.Volumes
 {
@@ -20,7 +21,7 @@ namespace HolePuncher.Volumes
         }
         public void Render(Volume volume)
         {
-            SetModel(volume.GetVertexPositionNormalTexture());
+            SetModel(Triangle.TrianglesToVertices(volume.GetTriangles()));
         }
         private void SetModel(VertexPositionNormalTexture[] vertices)
         {

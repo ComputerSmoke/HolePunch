@@ -121,7 +121,6 @@ namespace HolePuncher
         }
         public void AddHoleFromWorld(Vector3 pos, Vector3 dir, float radius)
         {
-           // int x = Fib(10);
             dir.Normalize();
             Entity.Transform.GetWorldTransformation(out Vector3 worldPos, out Quaternion rot, out _);
             rot.Rotate(ref dir);

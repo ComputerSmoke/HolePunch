@@ -172,15 +172,15 @@ namespace HolePuncher.Volumes
                 face.plane.RotateAround(target, axis, angle);
             BoundingBox = BoundingBox.RotateAround(target, axis, angle);
         }
-        public VertexPositionNormalTexture[] GetVertexPositionNormalTexture()
+        public List<Triangle> GetTriangles()
         {
             List<Triangle> triangles = [];
-            foreach(Face face in Faces)
+            foreach (Face face in Faces)
             {
                 Triangle[] triangulation = Triangle.Triangulate(face.plane, face.geometry, false);
                 triangles.AddRange(triangulation);
             }
-            return Triangle.TrianglesToVertices(triangles);
+            return triangles;
         }
         public bool IntersectsPrism(Prism prism)
         {
