@@ -172,12 +172,23 @@ namespace HolePuncher.Volumes
                 face.plane.RotateAround(target, axis, angle);
             BoundingBox = BoundingBox.RotateAround(target, axis, angle);
         }
+        //Get triangles that make faces of volume
         public List<Triangle> GetTriangles()
         {
             List<Triangle> triangles = [];
             foreach (Face face in Faces)
             {
-                Triangle[] triangulation = Triangle.Triangulate(face.plane, face.geometry, false);
+                Coordinate c0 = face.geometry.Envelope.Coordinates[0];
+                Coordinate c1 = face.geometry.Envelope.Coordinates[1];
+                Coordinate c2 = face.geometry.Envelope.Coordinates[2];
+                Triangle baseTri = new(face.plane, c0, c1, c2)
+                {
+                    IsOuterFace = true,
+                    T1 = new Vector2(1, 0),
+                    T2 = Vector2.Zero,
+                    T3 = new Vector2(0,1)
+                };
+                Triangle[] triangulation = Triangle.Triangulate(baseTri, face.geometry);
                 triangles.AddRange(triangulation);
             }
             return triangles;

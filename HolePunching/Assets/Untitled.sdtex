@@ -1,0 +1,8 @@
+!Texture
+Id: f8687ad9-1574-4e39-b616-c2d5ce4a914a
+SerializedVersion: {Stride: 2.0.0.0}
+Tags: []
+Source: !file ../../../../../Untitled.png
+IsSizeInPercentage: false
+Type: !ColorTextureType
+    ColorKeyColor: {R: 255, G: 0, B: 255, A: 255}

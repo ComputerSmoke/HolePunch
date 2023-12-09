@@ -23,7 +23,8 @@ namespace HolePuncher
         private readonly GraphicsDevice graphicsDevice = graphicsDevice;
         public readonly int maxVerts = maxVerts;
         public readonly float atomicVolume = atomicVolume;
-        private Mesh mesh;
+        private Mesh outerMesh;
+        private Mesh innerMesh;
         //Set vertices of this tree
         public void SetVertices(List<Triangle> verts)
         {
@@ -43,14 +44,22 @@ namespace HolePuncher
         private void SetVerticesLeaf(List<Triangle> verts)
         {
             this.verts = verts;
-            mesh = BuildMesh();
+            (innerMesh, outerMesh) = BuildMeshes();
             Split();
         }
-        private Mesh BuildMesh()
+        //Build outer and inner meshes from triangles
+        private (Mesh, Mesh) BuildMeshes()
         {
-            if (verts.Count == 0)
+            var (innerVerts, outerVerts) = Triangle.TrianglesToInnerOuterVertices(verts);
+            return (
+                BuildMesh(innerVerts, graphicsDevice, 0),
+                BuildMesh(outerVerts, graphicsDevice, 1)
+            );
+        }
+        private static Mesh BuildMesh(VertexPositionNormalTexture[] vertices, GraphicsDevice graphicsDevice, int materialIndex)
+        {
+            if(vertices.Length == 0)
                 return null;
-            VertexPositionNormalTexture[] vertices = Triangle.TrianglesToVertices(verts);
             var vertexBuffer = Stride.Graphics.Buffer.Vertex.New(graphicsDevice, vertices,
                                                                  GraphicsResourceUsage.Dynamic);
             int[] indices = new int[vertices.Length];
@@ -69,7 +78,7 @@ namespace HolePuncher
                     VertexBuffers = [new VertexBufferBinding(vertexBuffer,
                                   VertexPositionNormalTexture.Layout, vertexBuffer.ElementCount)],
                 },
-                MaterialIndex=0
+                MaterialIndex = materialIndex
             };
         }
         //Split into two children along axis of greatest length
@@ -123,7 +132,13 @@ namespace HolePuncher
         {
             if (Leaf())
             {
-                return mesh == null ? [] : [mesh];
+                if (innerMesh != null && outerMesh != null)
+                    return [innerMesh, outerMesh];
+                if (innerMesh != null)
+                    return [innerMesh];
+                if(outerMesh != null)
+                    return [outerMesh];
+                return [];
             }
             List<Mesh> res = left.GetMeshes();
             res.AddRange(right.GetMeshes());

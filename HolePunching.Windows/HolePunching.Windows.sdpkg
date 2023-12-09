@@ -14,5 +14,4 @@ OutputGroupDirectories: {}
 ExplicitFolders: []
 Bundles: []
 TemplateFolders: []
-RootAssets:
-    - 273d0317-0c94-41e7-9f48-fecb21a81e1d:Sphere Material
+RootAssets: []

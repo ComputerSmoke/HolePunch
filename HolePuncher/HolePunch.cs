@@ -288,7 +288,7 @@ namespace HolePuncher
             try
             {
                 Geometry cutProj = triangle.geometry.Difference(holeSlice);
-                return Triangle.Triangulate(triangle.plane, cutProj, false);
+                return Triangle.Triangulate(triangle, cutProj);
             } catch (Exception) {
                 return [];
             }
@@ -302,7 +302,7 @@ namespace HolePuncher
             try
             {
                 Geometry cutProj = triangle.geometry.Intersection(holeSlice);
-                return Triangle.Triangulate(triangle.plane, cutProj, false);
+                return Triangle.Triangulate(triangle, cutProj);
             }
             catch (Exception) {
                 return [];

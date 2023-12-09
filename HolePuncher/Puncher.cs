@@ -14,15 +14,17 @@ namespace HolePuncher
     public class Puncher
     {
         private readonly ModelComponent modelComponent;
-        private readonly Material material;
+        private readonly Material innerMaterial;
+        private readonly Material outerMaterial;
         private readonly FaceTree faceTree;
         private readonly Queue<Prism> holeQueue;
         private bool queueLock;
         public Puncher(Volume initialShape, ModelComponent modelComponent,
-        Material material, GraphicsDevice graphicsDevice, int leafCapacity, float atomicVolume)
+        Material innerMaterial, Material outerMaterial, GraphicsDevice graphicsDevice, int leafCapacity, float atomicVolume)
         {
             this.modelComponent = modelComponent;
-            this.material = material;
+            this.innerMaterial = innerMaterial;
+            this.outerMaterial = outerMaterial;
             Vector3 v0 = initialShape.BoundingBox.min;
             Vector3 v1 = initialShape.BoundingBox.max;
             faceTree = new(v0, v1, graphicsDevice, leafCapacity, atomicVolume);
@@ -33,7 +35,8 @@ namespace HolePuncher
         private void UpdateModel()
         {
             modelComponent.Model = faceTree.GetModel();
-            modelComponent.Materials[0] = material;
+            modelComponent.Materials[0] = innerMaterial;
+            modelComponent.Materials[1] = outerMaterial;
         }
         public void AddHole(Prism hole)
         {

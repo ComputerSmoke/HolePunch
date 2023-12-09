@@ -78,7 +78,7 @@ namespace HolePuncher.Volumes.Faces
         {
             return ToWorldSpace(GeometryHelper.CoordToVec(planePoint));
         }
-        private static float ProjDist(Vector3 u, Vector3 v)
+        public static float ProjDist(Vector3 u, Vector3 v)
         {
             return Vector3.Dot(v, u) / Vector3.Dot(u, u);
         }
