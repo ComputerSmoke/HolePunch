@@ -235,9 +235,9 @@ namespace HolePuncher
             }
             return Triangle.Triangulate(plane, wall, false);
         }
+        //Sort by which is further forward at an midpoint of one of the lines. For non intersecting, this puts line in front first.
         private static int CompareLines(LineString line1, LineString line2)
         {
-            //Sort by which is further forward at an midpoint of one of the lines. For non intersecting, this puts line in front first.
             Coordinate p1 = line1.Coordinates[0];
             Coordinate p2 = line1.Coordinates[^1];
             Coordinate q1 = line2.Coordinates[0];

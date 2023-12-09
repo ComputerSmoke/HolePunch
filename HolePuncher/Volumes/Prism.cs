@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using HolePuncher.Volumes.Faces;
 using NetTopologySuite.Geometries;
 using Stride.Core.Mathematics;
+using Stride.Rendering;
 using Plane = HolePuncher.Volumes.Faces.Plane;
 
 namespace HolePuncher.Volumes
@@ -20,6 +21,13 @@ namespace HolePuncher.Volumes
         public Geometry Slice(Plane plane)
         {
             throw new Exception("Interest area must be provided to take slice of prism with unlimited height.");
+        }
+        public Prism ToMeshSpace(Mesh mesh, Skeleton skeleton)
+        {
+            Vector3 newStart = mesh.PointToMeshSpace(skeleton, facePlane.origin);
+            Vector3 newNormal = mesh.DirToMeshSpace(skeleton, normal);
+            float newRadius = mesh.ScaleToMeshSpace(skeleton, radius);
+            return new Prism(newStart, newNormal, newRadius, numSides);
         }
         //Get the slice of the prism with respect to provided plane, may be limited to area around provided triangle.
         public Geometry Slice(Plane plane, Geometry interestArea)

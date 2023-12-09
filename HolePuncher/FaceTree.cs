@@ -14,7 +14,7 @@ using Stride.Graphics;
 
 namespace HolePuncher
 {
-    internal class FaceTree(Vector3 p0, Vector3 p1, GraphicsDevice graphicsDevice, int maxVerts, float atomicVolume)
+    internal class FaceTree(Mesh originalMesh, int innerMaterialIndex, Vector3 p0, Vector3 p1, GraphicsDevice graphicsDevice, int maxVerts, float atomicVolume)
     {
         private FaceTree left;
         private FaceTree right;
@@ -25,6 +25,8 @@ namespace HolePuncher
         public readonly float atomicVolume = atomicVolume;
         private Mesh outerMesh;
         private Mesh innerMesh;
+        public readonly Mesh originalMesh = originalMesh;
+        private readonly int innerMaterialIndex = innerMaterialIndex;
         //Set vertices of this tree
         public void SetVertices(List<Triangle> verts)
         {
@@ -51,12 +53,11 @@ namespace HolePuncher
         private (Mesh, Mesh) BuildMeshes()
         {
             var (innerVerts, outerVerts) = Triangle.TrianglesToInnerOuterVertices(verts);
-            return (
-                BuildMesh(innerVerts, graphicsDevice, 0),
-                BuildMesh(outerVerts, graphicsDevice, 1)
-            );
+            Mesh innerMesh = BuildMesh(innerVerts, graphicsDevice, innerMaterialIndex);
+            Mesh outerMesh = BuildMesh(outerVerts, graphicsDevice, originalMesh.MaterialIndex);
+            return (innerMesh, outerMesh);
         }
-        private static Mesh BuildMesh(VertexPositionNormalTexture[] vertices, GraphicsDevice graphicsDevice, int materialIndex)
+        private Mesh BuildMesh(VertexPositionNormalTexture[] vertices, GraphicsDevice graphicsDevice, int materialIndex)
         {
             if(vertices.Length == 0)
                 return null;
@@ -78,7 +79,8 @@ namespace HolePuncher
                     VertexBuffers = [new VertexBufferBinding(vertexBuffer,
                                   VertexPositionNormalTexture.Layout, vertexBuffer.ElementCount)],
                 },
-                MaterialIndex = materialIndex
+                MaterialIndex = materialIndex,
+                NodeIndex = originalMesh.NodeIndex
             };
         }
         //Split into two children along axis of greatest length
@@ -91,31 +93,31 @@ namespace HolePuncher
             {
                 Vector3 p1 = box.BoundingBox.min;
                 Vector3 p2 = new(box.BoundingBox.min.X + diff.X/2, box.BoundingBox.max.Y, box.BoundingBox.max.Z);
-                left = new FaceTree(p1, p2, graphicsDevice, maxVerts, atomicVolume);
+                left = new FaceTree(originalMesh, innerMaterialIndex, p1, p2, graphicsDevice, maxVerts, atomicVolume);
                 left.SetVertices(verts);
                 Vector3 p3 = new (box.BoundingBox.min.X + diff.X / 2, box.BoundingBox.min.Y, box.BoundingBox.min.Z);
                 Vector3 p4 = new(box.BoundingBox.max.X, box.BoundingBox.max.Y, box.BoundingBox.max.Z);
-                right = new FaceTree(p3, p4, graphicsDevice, maxVerts, atomicVolume);
+                right = new FaceTree(originalMesh, innerMaterialIndex, p3, p4, graphicsDevice, maxVerts, atomicVolume);
                 right.SetVertices(verts);
             } else if(Math.Abs(diff.Y) > Math.Abs(diff.Z))
             {
                 Vector3 p1 = box.BoundingBox.min;
                 Vector3 p2 = new(box.BoundingBox.max.X, box.BoundingBox.min.Y + diff.Y/2, box.BoundingBox.max.Z);
-                left = new FaceTree(p1, p2, graphicsDevice, maxVerts, atomicVolume);
+                left = new FaceTree(originalMesh, innerMaterialIndex, p1, p2, graphicsDevice, maxVerts, atomicVolume);
                 left.SetVertices(verts);
                 Vector3 p3 = new(box.BoundingBox.min.X, box.BoundingBox.min.Y + diff.Y / 2, box.BoundingBox.min.Z);
                 Vector3 p4 = new(box.BoundingBox.max.X, box.BoundingBox.max.Y, box.BoundingBox.max.Z);
-                right = new FaceTree(p3, p4, graphicsDevice, maxVerts, atomicVolume);
+                right = new FaceTree(originalMesh, innerMaterialIndex, p3, p4, graphicsDevice, maxVerts, atomicVolume);
                 right.SetVertices(verts);
             } else
             {
                 Vector3 p1 = box.BoundingBox.min;
                 Vector3 p2 = new(box.BoundingBox.max.X, box.BoundingBox.max.Y, box.BoundingBox.min.Z + diff.Z / 2);
-                left = new FaceTree(p1, p2, graphicsDevice, maxVerts, atomicVolume);
+                left = new FaceTree(originalMesh, innerMaterialIndex, p1, p2, graphicsDevice, maxVerts, atomicVolume);
                 left.SetVertices(verts);
                 Vector3 p3 = new(box.BoundingBox.min.X, box.BoundingBox.min.Y, box.BoundingBox.min.Z + diff.Z / 2);
                 Vector3 p4 = new(box.BoundingBox.max.X, box.BoundingBox.max.Y, box.BoundingBox.max.Z);
-                right = new FaceTree(p3, p4, graphicsDevice, maxVerts, atomicVolume);
+                right = new FaceTree(originalMesh, innerMaterialIndex, p3, p4, graphicsDevice, maxVerts, atomicVolume);
                 right.SetVertices(verts);
             }
             verts = [];
@@ -143,12 +145,6 @@ namespace HolePuncher
             List<Mesh> res = left.GetMeshes();
             res.AddRange(right.GetMeshes());
             return res;
-        }
-        public Model GetModel()
-        {
-            List<Mesh> meshes = GetMeshes();
-            Model model = [.. meshes];
-            return model;
         }
         public List<Triangle> GetVertices()
         {

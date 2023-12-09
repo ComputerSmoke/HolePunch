@@ -10,47 +10,39 @@ using System.Threading.Tasks;
 using Stride.Core.Mathematics;
 using HolePuncher.Volumes.Faces;
 using NetTopologySuite.Noding;
+using Stride.Core.Collections;
+using Stride.Games;
 
 namespace HolePuncher
 {
     public class Puncher
     {
         private readonly ModelComponent modelComponent;
-        private readonly Material innerMaterial;
-        private readonly Material outerMaterial;
-        private readonly FaceTree faceTree;
+        private readonly Skeleton skeleton;
         private readonly Queue<Prism> holeQueue;
+        private readonly List<FaceTree> faceTrees;
         private bool queueLock;
-        //Initialize with new volume shape
-        public Puncher(Volume initialShape, ModelComponent modelComponent,
-        Material innerMaterial, Material outerMaterial, GraphicsDevice graphicsDevice, int leafCapacity, float atomicVolume)
-        {
-            this.modelComponent = modelComponent;
-            this.innerMaterial = innerMaterial;
-            this.outerMaterial = outerMaterial;
-            Vector3 v0 = initialShape.BoundingBox.min;
-            Vector3 v1 = initialShape.BoundingBox.max;
-            faceTree = new(v0, v1, graphicsDevice, leafCapacity, atomicVolume);
-            faceTree.SetVertices(initialShape.GetTriangles());
-            UpdateModel();
-            holeQueue = [];
-        }
         //Intialize from existing model 
-        public Puncher(Stride.Games.IGame game, ModelComponent modelComponent, Material innerMaterial, int leafCapacity, float atomicVolume)
+        public Puncher(IGame game, ModelComponent modelComponent, Material innerMaterial, int leafCapacity, float atomicVolume)
         {
             this.modelComponent = modelComponent;
-            this.innerMaterial = innerMaterial;
-            this.outerMaterial = modelComponent.Model.Materials[0].Material;
-            List<Triangle> triangles = modelComponent.Model.GetTriangles(game);
-            var (v0, v1) = VertBounds(triangles);
-            faceTree = new(v0, v1, game.GraphicsDevice, leafCapacity, atomicVolume);
-            faceTree.SetVertices(triangles);
+            skeleton = modelComponent.Model.Skeleton;
+            modelComponent.Materials[modelComponent.Materials.Count] = innerMaterial;
+            faceTrees = [];
+            foreach (Mesh mesh in modelComponent.Model.Meshes)
+            {
+                List<Triangle> triangles = mesh.GetTriangles(game);
+                var (p0, p1) = VertBounds(triangles);
+                FaceTree tree = new(mesh, modelComponent.Materials.Count-1, p0, p1, game.GraphicsDevice, leafCapacity, atomicVolume);
+                tree.SetVertices(triangles);
+                faceTrees.Add(tree);
+            }
             UpdateModel();
             holeQueue = [];
         }
         private static (Vector3, Vector3) VertBounds(List<Triangle> triangles)
         {
-            Vector3 min = new (1e6f, 1e6f, 1e6f);
+            Vector3 min = new(1e6f, 1e6f, 1e6f);
             Vector3 max = new(-1e6f, -1e6f, -1e6f);
             static Vector3 MinVert(Triangle triangle)
             {
@@ -81,9 +73,12 @@ namespace HolePuncher
         }
         private void UpdateModel()
         {
-            modelComponent.Model = faceTree.GetModel();
-            modelComponent.Materials[0] = innerMaterial;
-            modelComponent.Materials[1] = outerMaterial;
+            List<Mesh> meshes = [];
+            foreach(FaceTree faceTree in faceTrees)
+                meshes.AddRange(faceTree.GetMeshes());
+            Model model = [.. meshes];
+            model.Skeleton = skeleton;
+            modelComponent.Model = model;
         }
         public void AddHole(Prism hole)
         {
@@ -100,7 +95,11 @@ namespace HolePuncher
                 while (holeQueue.Count > 0)
                 {
                     Prism hole = holeQueue.Dequeue();
-                    faceTree.PunchHole(hole);
+                    foreach(FaceTree faceTree in faceTrees)
+                    {
+                        Prism localHole = hole.ToMeshSpace(faceTree.originalMesh, skeleton);
+                        faceTree.PunchHole(localHole);
+                    }
                     UpdateModel();
                 }
             });

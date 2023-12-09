@@ -22,7 +22,6 @@ namespace HolePuncher
         public int LeafCapacity { get; set; }
         public float AtomicSize { get; set; }
         public Material InnerMaterial { get; set; }
-        public Material OuterMaterial { get; set; }
         public override void Start()
         {
             base.Start();

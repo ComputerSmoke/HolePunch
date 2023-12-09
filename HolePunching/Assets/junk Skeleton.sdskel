@@ -1,0 +1,11 @@
+!Skeleton
+Id: fac259a1-e818-4668-8635-d07442acba32
+SerializedVersion: {Stride: 2.0.0.0}
+Tags: []
+Source: !file ../../../../../Blender/character/junk.fbx
+PivotPosition: {X: 0.0, Y: 0.0, Z: 0.0}
+Nodes:
+    895e96d09f84e192284b57282f9616a2: {Name: RootNode, Depth: 0}
+    902371f634ef218e518530039d6ea340: {Name: Cube, Depth: 1}
+~SourceHashes:
+    946cb2153b5477bd7c9e011af57f0ab1~../../../../../Blender/character/junk.fbx: 545483854a6fb9198e4772901f91ec4c
