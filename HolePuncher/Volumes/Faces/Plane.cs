@@ -32,20 +32,17 @@ namespace HolePuncher.Volumes.Faces
             unitX.Normalize();
             unitY.Normalize();
         }
-        public Plane(Vector3 origin, Vector3 unitX, Vector3 unitY)
-        {
-            this.origin = origin;
-            this.unitX = unitX;
-            this.unitY = unitY;
-            normal = Vector3.Cross(this.unitX, this.unitY);
-            normal.Normalize();
-        }
+        public Plane(Vector3 origin, Vector3 unitX, Vector3 unitY) : this(origin, Vector3.Cross(unitX, unitY), unitX, unitY)
+        {}
         public Plane(Vector3 origin, Vector3 normal, Vector3 unitX, Vector3 unitY)
         {
             this.origin = origin;
             this.normal = normal;
+            this.normal.Normalize();
             this.unitX = unitX;
             this.unitY = unitY;
+            this.unitX.Normalize();
+            this.unitY.Normalize();
         }
         //Rotate plane by rot around source
         public void RotateAround(Vector3 target, Vector3 axis, float angle)

@@ -129,9 +129,6 @@ Hierarchy:
                             fc8377c48785ab704fc087e6fbada49c~0: 273d0317-0c94-41e7-9f48-fecb21a81e1d:External Material
                     4499d96a826f9712625d7bf2afc68f3c: !HolePuncher.Punchable,HolePuncher
                         Id: fde3f06b-42e9-4436-a229-60ab04a50d6b
-                        sx: 1.0
-                        sy: 1.0
-                        sz: 1.0
                         LeafCapacity: 1000000
                         AtomicSize: 1E-06
                         InnerMaterial: 2467c827-9d0c-4e0a-b6f4-ea55f2bb6a3f:Internal Material

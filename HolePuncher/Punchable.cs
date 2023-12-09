@@ -19,9 +19,6 @@ namespace HolePuncher
     {
 
         private Puncher puncher;
-        public float sx;
-        public float sy;
-        public float sz;
         public int LeafCapacity { get; set; }
         public float AtomicSize { get; set; }
         public Material InnerMaterial { get; set; }
@@ -30,10 +27,7 @@ namespace HolePuncher
         {
             base.Start();
             ModelComponent modelComponent = Entity.Get<ModelComponent>();
-            Vector3 p0 = new(-sx / 2, -sy / 2, -sz / 2);
-            Vector3 p1 = p0 * -1;
-            Box initialVolume = new(p0, p1);
-            puncher = new(initialVolume, modelComponent, InnerMaterial, OuterMaterial, GraphicsDevice, LeafCapacity, AtomicSize);
+            puncher = new(Game, modelComponent, InnerMaterial, LeafCapacity, AtomicSize);
         }
         public void AddHoleFromWorld(Vector3 pos, Vector3 dir, float radius)
         {
