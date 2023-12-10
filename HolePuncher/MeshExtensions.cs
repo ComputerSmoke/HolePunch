@@ -96,7 +96,7 @@ namespace HolePuncher
 
         static unsafe (List<VertexTexture> verts, List<int> indices) GetMeshData(Mesh meshData, IServiceRegistry services, IGame game)
         {
-            //NOTE: FBX should be exported from blender with Use space transform disabled to avoid floating point precision errors and stuff
+            //NOTE: FBX should be exported from blender with Apply Scalings: "FBX units scale" to avoid floating point precision errors and stuff
             var combinedVerts = new List<VertexTexture>(meshData.Draw.VertexBuffers[0].Count);
             var combinedIndices = new List<int>(meshData.Draw.IndexBuffer.Count);
 

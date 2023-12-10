@@ -31,12 +31,15 @@ namespace HolePuncher
         public void AddHoleFromWorld(Vector3 pos, Vector3 dir, float radius)
         {
             dir.Normalize();
-            Entity.Transform.GetWorldTransformation(out Vector3 worldPos, out Quaternion rot, out _);
+            Entity.Transform.GetWorldTransformation(out Vector3 worldPos, out Quaternion rot, out Vector3 scale);
+            if (Math.Abs(scale.X - scale.Y) > 1e-6 || Math.Abs(scale.X - scale.Z) > 1e-6)
+                throw new UnpunchableMeshException("X Y and Z scales of model must be equal");
             rot.Invert();
             rot.Rotate(ref dir);
             pos -= worldPos;
             rot.Rotate(ref pos);
             pos -= dir * .1f;
+            pos /= scale.X;
             Prism hole = new(pos, -dir, radius, 6);
             puncher.AddHole(hole);
         }
