@@ -9,6 +9,7 @@ using Stride.Core.Mathematics;
 using HolePuncher.Volumes.Faces;
 using Stride.Graphics;
 using System.ComponentModel;
+using Vortice.Vulkan;
 
 namespace HolePuncher
 {
@@ -29,6 +30,8 @@ namespace HolePuncher
                 Vector3 v1 = verts[indices[i]].pos;
                 Vector3 v2 = verts[indices[i+1]].pos;
                 Vector3 v3 = verts[indices[i+2]].pos;
+                if ((v1 - v2).LengthSquared() < 1e-6 || (v1 - v3).LengthSquared() < 1e-6 || (v2 - v3).LengthSquared() < 1e-6)
+                    continue;
                 Triangle triangle = new(v1, v2, v3)
                 {
                     T1 = verts[indices[i]].textPos,
@@ -43,6 +46,8 @@ namespace HolePuncher
         //Convert point from model space to mesh space
         public static Vector3 PointToMeshSpace(this Mesh mesh, Skeleton skeleton, Vector3 input)
         {
+            if (skeleton == null)
+                return input;
             List<TransformTRS> transforms = ParentTransforms(skeleton.Nodes, mesh.NodeIndex);
             foreach (TransformTRS transform in transforms)
             {
@@ -57,6 +62,8 @@ namespace HolePuncher
         //Convert direction from model to mesh space
         public static Vector3 DirToMeshSpace(this Mesh mesh, Skeleton skeleton, Vector3 input)
         {
+            if (skeleton == null)
+                return input;
             List<TransformTRS> transforms = ParentTransforms(skeleton.Nodes, mesh.NodeIndex);
             foreach (TransformTRS transform in transforms)
             {
@@ -69,6 +76,8 @@ namespace HolePuncher
         //Scale value from model space to mesh space
         public static float ScaleToMeshSpace(this Mesh mesh, Skeleton skeleton, float input)
         {
+            if (skeleton == null)
+                return input;
             List<TransformTRS> transforms = ParentTransforms(skeleton.Nodes, mesh.NodeIndex);
             foreach (TransformTRS transform in transforms)
             {
