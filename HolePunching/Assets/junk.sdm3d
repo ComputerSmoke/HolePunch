@@ -1,0 +1,15 @@
+!Model
+Id: aba4c037-b4fe-49dd-a0e3-80c87ba0f97c
+SerializedVersion: {Stride: 2.0.0.0}
+Tags: []
+Source: !file ../../../../../Blender/character/junk.fbx
+Skeleton: fac259a1-e818-4668-8635-d07442acba32:junk Skeleton
+PivotPosition: {X: 0.0, Y: 0.0, Z: 0.0}
+Materials:
+    55f9de33491702a2e125e7950d6d34e3:
+        Name: Material
+        MaterialInstance:
+            Material: 273d0317-0c94-41e7-9f48-fecb21a81e1d:External Material
+Modifiers: {}
+~SourceHashes:
+    562f401fe66d8b95400ce4bf3d3d5d79~../../../../../Blender/character/junk.fbx: 545483854a6fb9198e4772901f91ec4c

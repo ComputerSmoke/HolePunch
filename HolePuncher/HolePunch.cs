@@ -14,33 +14,139 @@ using NetTopologySuite.Geometries;
 using NetTopologySuite.Triangulate.Polygon;
 using NetTopologySuite.Triangulate.Tri;
 using NetTopologySuite.Noding;
+using HolePuncher.Volumes;
+using System.Runtime.Serialization;
+using HolePuncher.Volumes.Faces;
+using Plane = HolePuncher.Volumes.Faces.Plane;
+using Triangle = HolePuncher.Volumes.Faces.Triangle;
 
 namespace HolePuncher
 {
     //Line segment intersections with faces, used to construct walls of hole
-    struct WallIntersect(Prism hole, Plane trianglePlane, Coordinate c1, Coordinate c2)
+    struct WallIntersect
     {
-        public Vector3 p1 = trianglePlane.ToWorldSpace(c1);
-        public Vector3 p2 = trianglePlane.ToWorldSpace(c2);
-        public bool forward = Vector3.Dot(trianglePlane.normal, hole.facePlane.normal) > 0;
+        public Vector3 p1;
+        public Vector3 p2;
+        public bool forward;
+        public WallIntersect(Prism hole, Plane trianglePlane, Coordinate c1, Coordinate c2)
+        {
+            p1 = trianglePlane.ToWorldSpace(c1);
+            p2 = trianglePlane.ToWorldSpace(c2);
+            forward = Vector3.Dot(trianglePlane.normal, hole.facePlane.normal) > 0;
+        }
+        public WallIntersect(Face face, Plane trianglePlane, Coordinate c1, Coordinate c2)
+        {
+            p1 = trianglePlane.ToWorldSpace(c1);
+            p2 = trianglePlane.ToWorldSpace(c2);
+            forward = Vector3.Dot(face.plane.unitY, trianglePlane.normal) < 0;
+        }
     }
-    struct WallIntersect2D(Plane plane, WallIntersect intersect)
+    struct WallIntersect2D
     {
-        public LineString line = GeometryHelper.CreateLineSegment(plane.ToPlaneSpace(intersect.p1), plane.ToPlaneSpace(intersect.p2));
-        public bool forward = intersect.forward;
+        public LineString line;
+        public bool forward;
+        public WallIntersect2D(Coordinate c0, Coordinate c1, bool forward)
+        {
+            line = GeometryHelper.CreateLineSegment(c0, c1);
+            this.forward = forward;
+        }
+        public WallIntersect2D(Plane plane, WallIntersect intersect) {
+            line = GeometryHelper.CreateLineSegment(plane.ToPlaneSpace(intersect.p1), plane.ToPlaneSpace(intersect.p2));
+            forward = intersect.forward;
+        }
+        
     }
     //Represents a triangle in 3 space
-    struct Triangle(Vector3 v1, Vector3 v2, Vector3 v3)
-    {
-        public Vector3 v1 = v1;
-        public Vector3 v2 = v2;
-        public Vector3 v3 = v3;
-        public Plane plane = new(v1, Vector3.Cross(v3 - v1, v2 - v1));
-    }
     public static class HolePunch
     {
+        //put a hole in the mesh by punching hole in faces, then adding walls of hole inside mesh
+        public static VertexPositionNormalTexture[] PunchHole(VertexPositionNormalTexture[] vertices, Volume hole)
+        {
+            Triangle[] triangles = new Triangle[vertices.Length / 3];
+            for(int i = 0; i < triangles.Length; i++)
+                triangles[i] = new Triangle(vertices[i*3].Position, vertices[i*3+1].Position, vertices[i*3+2].Position);
+            (List<Triangle> involved, List<Triangle> uninvolved) = FindAffected(triangles, hole);
+            List<Triangle> punched = hole.Punch(involved);
+            punched.AddRange(InternalWalls(involved, hole));
+            punched.AddRange(uninvolved);
+            return Triangle.TrianglesToVertices(punched);
+        }
+        //Sort triangles into a list that might be intersected, and one that is not intersected by hole
+        private static (List<Triangle>, List<Triangle>) FindAffected(Triangle[] triangles, Volume hole)
+        {
+            List<Triangle> affected = [];
+            List<Triangle> unaffected = [];
+            foreach(Triangle triangle in triangles)
+            {
+                if (!hole.BoundingBox.Intersects(triangle.BoundingBox))
+                    unaffected.Add(triangle);
+                else
+                {
+                    Geometry slice = hole.Slice(triangle.plane);
+                    bool intersects = slice.Intersects(triangle.geometry);
+                    if (intersects)
+                        affected.Add(triangle);
+                    else
+                        unaffected.Add(triangle);
+                }
+            }
+            return (affected, unaffected);
+        }
+        //For each face, build its internal walls. TODO: draw back face of hole if internal
+        private static List<Triangle> InternalWalls(List<Triangle> triangles, Volume hole)
+        {
+            List<Triangle> res = [];
+            foreach (Face face in hole.Faces)
+                res.AddRange(InternalWalls(triangles, face));
+            return res;
+        }
+        private static Triangle[] InternalWalls(List<Triangle> triangles, Face face)
+        {
+            float extendDist = (float)face.geometry.Envelope.Length / 2;
+            List<WallIntersect2D> intersects = [];
+            foreach(Triangle triangle in triangles)
+            {
+                Geometry sliceGeometry = face.SliceLocal(triangle.plane);
+                if (sliceGeometry.Coordinates.Length < 2)
+                    continue;
+                Vector2 normal = face.plane.Project(triangle.plane.normal + face.plane.origin);
+                bool forward = Vector2.Dot(normal, Vector2.UnitY) < 0;
+                intersects.Add(new(sliceGeometry.Coordinates[0], sliceGeometry.Coordinates[^1], forward));
+            }
+            //add bounds of face (all as negative)
+            for(int i = 0; i < face.geometry.Coordinates.Length-1; i++)
+            {
+                Coordinate c0 = face.geometry.Coordinates[i];
+                Coordinate c1 = face.geometry.Coordinates[i + 1];
+                //TODO: bound must start forward if inside shape, so rebase to guarantee origin outside and search stuff from outside or whatever
+                intersects.Add(new(c0, c1, false));
+            }
+            return BuildWalls(intersects.ToArray(), face.plane);
+        }
+        private static List<WallIntersect> FaceIntersects(List<Triangle> triangles, Face face)
+        {
+            List<WallIntersect> res = [];
+            foreach (Triangle triangle in triangles)
+            {
+                Geometry intersects = triangle.Slice(face.plane).Intersection(face.geometry);
+                if (intersects.Coordinates.Length < 2)
+                    continue;
+                WallIntersect intersect = new(face, triangle.plane, intersects.Coordinates[0], intersects.Coordinates[^1]);
+                res.Add(intersect);
+            }
+            return res;
+        }
         public static VertexPositionNormalTexture[] PunchHole(VertexPositionNormalTexture[] vertices, Prism hole)
         {
+            List<Triangle> verts = [];
+            for(int i = 0; i < vertices.Length - 2; i += 3)
+                verts.Add(new(vertices[i].Position, vertices[i + 1].Position, vertices[i + 2].Position));
+            return Triangle.TrianglesToVertices(PunchHole(verts, hole));
+        }
+        //TODO: fix hole starting inside a volume, hitting negative edge first
+        public static List<Triangle> PunchHole(List<Triangle> verts, Prism hole)
+        {
+            Prism smallHole = new(hole.facePlane.origin, hole.facePlane.normal, hole.radius - 1e-4f, hole.numSides);
             List<Triangle> punched = [];
             List<WallIntersect>[] wallIntersects = new List<WallIntersect>[hole.face.Coordinates.Length - 1];
             Plane[] wallPlanes = new Plane[wallIntersects.Length];
@@ -49,32 +155,16 @@ namespace HolePuncher
                 wallIntersects[i] = [];
                 wallPlanes[i] = EdgePlane(hole.face.Coordinates[i], hole.face.Coordinates[i + 1], hole.facePlane);
             }
-            for (int i = 0; i < vertices.Length - 2; i += 3)
+            foreach (Triangle triangle in verts)
             {
-                Triangle triangle = new(vertices[i].Position, vertices[i + 1].Position, vertices[i + 2].Position);
-                Polygon trianglePoly = GeometryHelper.CreateTriangle(
-                    triangle.plane.ToPlaneSpace(triangle.v1),
-                    triangle.plane.ToPlaneSpace(triangle.v2),
-                    triangle.plane.ToPlaneSpace(triangle.v3)
-                );
-                Polygon holeSlice = hole.Slice(triangle.plane, trianglePoly);
-                Polygon smallHoleSlice = hole.SmallSlice(triangle.plane, trianglePoly);
-                punched.AddRange(Punch(triangle, hole, trianglePoly, smallHoleSlice));
-                AddWallIntersects(wallIntersects, triangle, hole, trianglePoly, holeSlice);
+                Geometry holeSlice = hole.Slice(triangle.plane, triangle.geometry);
+                Geometry smallHoleSlice = smallHole.Slice(triangle.plane, triangle.geometry);
+                punched.AddRange(Punch(triangle, smallHoleSlice));
+                AddWallIntersects(wallIntersects, triangle, hole, holeSlice);
             }
             List<Triangle> walls = BuildAllWalls(wallIntersects, wallPlanes);
             punched.AddRange(walls);
-            VertexPositionNormalTexture[] newVertices = new VertexPositionNormalTexture[punched.Count * 3];
-            for (int i = 0; i < punched.Count; i++)
-            {
-                newVertices[i * 3].Position = punched[i].v1;
-                newVertices[i * 3 + 1].Position = punched[i].v2;
-                newVertices[i * 3 + 2].Position = punched[i].v3;
-                newVertices[i * 3].Normal = punched[i].plane.normal;
-                newVertices[i * 3 + 1].Normal = punched[i].plane.normal;
-                newVertices[i * 3 + 2].Normal = punched[i].plane.normal;
-            }
-            return newVertices;
+            return punched;
         }
         private static Plane EdgePlane(Coordinate c1, Coordinate c2, Plane facePlane)
         {
@@ -101,6 +191,10 @@ namespace HolePuncher
             WallIntersect2D[] intersects = new WallIntersect2D[wallIntersects.Count];
             for (int i = 0; i < intersects.Length; i++)
                 intersects[i] = new(plane, wallIntersects[i]);
+            return BuildWalls(intersects, plane);
+        }
+        private static Triangle[] BuildWalls(WallIntersect2D[] intersects, Plane plane)
+        {
             Array.Sort(intersects, delegate (WallIntersect2D intersect1, WallIntersect2D intersect2)
             {
                 return CompareLines(intersect1.line, intersect2.line);
@@ -118,6 +212,8 @@ namespace HolePuncher
             Geometry wall = GeometryHelper.CreateEmpty();
             foreach (WallIntersect2D intersect in intersects)
             {
+                if (Math.Abs(intersect.line.Coordinates[0].X - intersect.line.Coordinates[^1].X) <= Plane.O)
+                    continue;
                 Coordinate b0 = new(intersect.line.Coordinates[0].X, maxY);
                 Coordinate b1 = new(intersect.line.Coordinates[^1].X, maxY);
                 Polygon shadow = GeometryHelper.CreatePolygon([
@@ -127,6 +223,7 @@ namespace HolePuncher
                     b0,
                     intersect.line.Coordinates[0]
                 ]);
+
                 try
                 {
                     if (intersect.forward)
@@ -134,13 +231,13 @@ namespace HolePuncher
                     else
                         wall = wall.Difference(shadow);
                 }
-                catch (Exception ex) { }
+                catch (Exception) { }
             }
-            return Triangulate(plane, wall);
+            return Triangle.Triangulate(plane, wall, false);
         }
+        //Sort by which is further forward at an midpoint of one of the lines. For non intersecting, this puts line in front first.
         private static int CompareLines(LineString line1, LineString line2)
         {
-            //Sort by which is further forward at an midpoint of one of the lines. For non intersecting, this puts line in front first.
             Coordinate p1 = line1.Coordinates[0];
             Coordinate p2 = line1.Coordinates[^1];
             Coordinate q1 = line2.Coordinates[0];
@@ -166,17 +263,17 @@ namespace HolePuncher
         }
         private static void AddWallIntersects(
             List<WallIntersect>[] wallIntersects,
-            Triangle triangle, Prism hole, Polygon trianglePoly, Polygon holeSlice)
+            Triangle triangle, Prism hole, Geometry holeSlice)
         {
             //No wall intersects if triangle plane parallel to hole, or outside of bounding box
-            if (hole.IsParallel(triangle.plane) || holeSlice == null || !holeSlice.Envelope.Intersects(trianglePoly.Envelope))
+            if (hole.IsParallel(triangle.plane) || holeSlice == null || !holeSlice.Envelope.Intersects(triangle.geometry.Envelope))
                 return;
             //Otherwise, add intersects for each edge
             for (int i = 0; i < holeSlice.Coordinates.Length - 1; i++)
             {
                 List<WallIntersect> intersectList = wallIntersects[i];
                 LineString edge = GeometryHelper.CreateLineSegment(holeSlice.Coordinates[i], holeSlice.Coordinates[i + 1]);
-                Geometry intersects = edge.Intersection(trianglePoly);
+                Geometry intersects = edge.Intersection(triangle.geometry);
                 if (intersects.Coordinates.Length < 2)
                     continue;
                 WallIntersect intersect = new(hole, triangle.plane, intersects.Coordinates[0], intersects.Coordinates[^1]);
@@ -184,35 +281,32 @@ namespace HolePuncher
             }
         }
         //Put hole in triangle, then triangularize result and return triangles
-        private static Triangle[] Punch(Triangle triangle, Prism hole, Polygon trianglePoly, Polygon holeSlice)
+        public static Triangle[] Punch(Triangle triangle, Geometry holeSlice)
         {
-            if (holeSlice == null || !holeSlice.Envelope.Intersects(trianglePoly.Envelope))
+            if (holeSlice == null || !holeSlice.Envelope.Intersects(triangle.geometry.Envelope))
                 return [triangle];
-
-            Geometry cutProj = trianglePoly.Difference(holeSlice.Difference(holeSlice.Boundary));
-            return Triangulate(triangle.plane, cutProj);
-        }
-        //Turn geometry on plane into triangles, then put back in 3-space from plane
-        private static Triangle[] Triangulate(Plane plane, Geometry geom)
-        {
-            if (geom.IsEmpty || geom.Coordinates.Length < 3)
-                return [];
-            var tris = new ConstrainedDelaunayTriangulator(geom).GetTriangles();
-            Triangle[] res = new Triangle[tris.Count];
-
-            Triangle TriToTriangle(Tri t) =>
-            new(
-                    plane.ToWorldSpace(GeometryHelper.CoordToVec(t.GetCoordinate(0))),
-                    plane.ToWorldSpace(GeometryHelper.CoordToVec(t.GetCoordinate(1))),
-                    plane.ToWorldSpace(GeometryHelper.CoordToVec(t.GetCoordinate(2)))
-                );
-            int i = 0;
-            foreach (Tri t in tris)
+            try
             {
-                res[i] = TriToTriangle(t);
-                i++;
+                Geometry cutProj = triangle.geometry.Difference(holeSlice);
+                return Triangle.Triangulate(triangle, cutProj);
+            } catch (Exception) {
+                return [];
             }
-            return res;
+        }
+        //Take only intersection of triangle with hole, then triangularize and return triangles
+        public static Triangle[] Crop(Triangle triangle, Geometry holeSlice)
+        {
+            if (holeSlice == null || !holeSlice.Envelope.Intersects(triangle.geometry.Envelope))
+                return [];
+
+            try
+            {
+                Geometry cutProj = triangle.geometry.Intersection(holeSlice);
+                return Triangle.Triangulate(triangle, cutProj);
+            }
+            catch (Exception) {
+                return [];
+            }
         }
     }
 }

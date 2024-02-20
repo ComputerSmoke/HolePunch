@@ -11,7 +11,7 @@ Hierarchy:
         - ref!! 038ecfdc-4e70-4b7c-82be-2be72b370a27
         - ref!! e19fe105-07f3-4cb6-9ef4-93f81d1e870c
         - ref!! 2928c24d-2d68-42f8-bcd8-e26d30622146
-        - ref!! e1cf866a-3414-4942-9572-c43ed58a1a9c
+        - ref!! 063f3587-8be7-4d9e-9e98-7761c419b8a3
     Parts:
         -   Entity:
                 Id: 038ecfdc-4e70-4b7c-82be-2be72b370a27
@@ -30,6 +30,45 @@ Hierarchy:
                         Id: 0726f1fe-9bd5-4a29-b369-7217002f97ae
                         Type: !LightSkybox
                             Skybox: 93b06e4b-e788-4661-b027-acb6ea92b532:Skybox
+        -   Entity:
+                Id: 063f3587-8be7-4d9e-9e98-7761c419b8a3
+                Name: junk
+                Components:
+                    1c29e832e336d4272c703dcf5faea566: !TransformComponent
+                        Id: c5f03d92-7ee7-412f-ac4b-973f943d7bc2
+                        Position: {X: 1.9966352, Y: 0.0, Z: -4.0510144}
+                        Rotation: {X: 0.0, Y: 0.38268346, Z: 0.0, W: 0.9238795}
+                        Scale: {X: 0.5, Y: 0.5, Z: 0.5}
+                        Children: {}
+                    c8546455861c312f769ed61f014ced18: !ModelComponent
+                        Id: 61930092-50b0-4426-a07a-96ac08551421
+                        Model: aba4c037-b4fe-49dd-a0e3-80c87ba0f97c:junk
+                        Materials:
+                            44528baaedb51c872bd63f1d11b4ca72~0: 273d0317-0c94-41e7-9f48-fecb21a81e1d:External Material
+                    3746d710250a139c2b839bdd556f282d: !HolePuncher.Punchable,HolePuncher
+                        Id: 9382d72e-32ec-4f59-a820-0d8672b8a207
+                        LeafCapacity: 1000000
+                        AtomicSize: 1E-06
+                        InnerMaterial: 8fd679a7-a911-4100-a6e3-fda4febd55c8:Blood
+                    710bfd090252eea5c2629f05c55f82e3: !RigidbodyComponent
+                        Id: 3d2b3aec-8799-4478-b251-5c3ac51c4ea5
+                        CanSleep: false
+                        Restitution: 0.0
+                        Friction: 0.5
+                        RollingFriction: 0.0
+                        CcdMotionThreshold: 0.0
+                        CcdSweptSphereRadius: 0.0
+                        IsTrigger: false
+                        IsKinematic: true
+                        Mass: 1.0
+                        LinearDamping: 0.0
+                        AngularDamping: 0.0
+                        OverrideGravity: false
+                        Gravity: {X: 0.0, Y: 0.0, Z: 0.0}
+                        NodeName: null
+                        ColliderShapes:
+                            c50b27b88e85703db1e8faaef0c305e1: !StaticMeshColliderShapeDesc
+                                Model: aba4c037-b4fe-49dd-a0e3-80c87ba0f97c:junk
         -   Entity:
                 Id: 2928c24d-2d68-42f8-bcd8-e26d30622146
                 Name: Raycaster
@@ -102,7 +141,7 @@ Hierarchy:
                 Components:
                     c32545b3f44cadfb0cc54f4c696d883c: !TransformComponent
                         Id: d4cb82c1-fb1b-4ddb-9076-20c46ec8da79
-                        Position: {X: 0.0, Y: 0.5, Z: 0.0}
+                        Position: {X: 0.0, Y: 0.5, Z: -1.4681604}
                         Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
                         Scale: {X: 1.0, Y: 1.0, Z: 1.0}
                         Children: {}
@@ -110,50 +149,14 @@ Hierarchy:
                         Id: a9f00135-e2ef-4a15-890d-b4781de327dd
                         Model: 7bcad567-5181-4317-9d44-15c03af5f87c:Sphere
                         Materials:
-                            fc8377c48785ab704fc087e6fbada49c~0: 273d0317-0c94-41e7-9f48-fecb21a81e1d:Sphere Material
+                            fc8377c48785ab704fc087e6fbada49c~0: 273d0317-0c94-41e7-9f48-fecb21a81e1d:External Material
                     4499d96a826f9712625d7bf2afc68f3c: !HolePuncher.Punchable,HolePuncher
                         Id: fde3f06b-42e9-4436-a229-60ab04a50d6b
+                        LeafCapacity: 1000000
+                        AtomicSize: 1E-06
+                        InnerMaterial: 2467c827-9d0c-4e0a-b6f4-ea55f2bb6a3f:Internal Material
                     15a9b5d28f5c80f16bc17d06bb3d80de: !RigidbodyComponent
                         Id: 87959ee4-5b5b-4e1f-97c6-d634828abb5e
-                        CanSleep: false
-                        Restitution: 0.0
-                        Friction: 0.5
-                        RollingFriction: 0.0
-                        CcdMotionThreshold: 0.0
-                        CcdSweptSphereRadius: 0.0
-                        IsTrigger: false
-                        IsKinematic: true
-                        Mass: 1.0
-                        LinearDamping: 0.0
-                        AngularDamping: 0.0
-                        OverrideGravity: false
-                        Gravity: {X: 0.0, Y: 0.0, Z: 0.0}
-                        NodeName: null
-                        ColliderShapes:
-                            92722c3bf3da1b9e0417c544d7f7bef9: !BoxColliderShapeDesc
-                                Is2D: false
-                                Size: {X: 1.0, Y: 1.0, Z: 1.0}
-                                LocalOffset: {X: 0.0, Y: 0.0, Z: 0.0}
-                                LocalRotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
-        -   Entity:
-                Id: e1cf866a-3414-4942-9572-c43ed58a1a9c
-                Name: Sphere
-                Components:
-                    c32545b3f44cadfb0cc54f4c696d883c: !TransformComponent
-                        Id: 8fa283d5-5534-4c18-b400-761b5bb240af
-                        Position: {X: -1.7306765, Y: 0.5, Z: 1.8777928}
-                        Rotation: {X: 0.0, Y: 0.0, Z: 0.0, W: 1.0}
-                        Scale: {X: 1.0, Y: 1.0, Z: 1.0}
-                        Children: {}
-                    8ad9b664a80ce7a4ffc4f12020b33d68: !ModelComponent
-                        Id: bb96eec7-08cf-4049-9bb2-e41141ff26b4
-                        Model: 7bcad567-5181-4317-9d44-15c03af5f87c:Sphere
-                        Materials:
-                            fc8377c48785ab704fc087e6fbada49c~0: 273d0317-0c94-41e7-9f48-fecb21a81e1d:Sphere Material
-                    4499d96a826f9712625d7bf2afc68f3c: !HolePuncher.Punchable,HolePuncher
-                        Id: 0e4c34df-933e-43e1-8497-1dff269e6af3
-                    15a9b5d28f5c80f16bc17d06bb3d80de: !RigidbodyComponent
-                        Id: 1520db73-cbef-47ca-b0aa-7f7967bf35ca
                         CanSleep: false
                         Restitution: 0.0
                         Friction: 0.5

@@ -10,132 +10,38 @@ using Stride.Core.Mathematics;
 using Stride.Rendering.Materials.ComputeColors;
 using Stride.Rendering.Materials;
 using Valve.VR;
+using HolePuncher.Volumes;
+using HolePuncher.Volumes.Faces;
 
 namespace HolePuncher
 {
-    public class Punchable : SyncScript
+    public class Punchable : StartupScript
     {
 
-        private ModelComponent modelComponent;
-        private VertexPositionNormalTexture[] vertices;
-        private Material material;
-        bool aaa;
+        private Puncher puncher;
+        public int LeafCapacity { get; set; }
+        public float AtomicSize { get; set; }
+        public Material InnerMaterial { get; set; }
         public override void Start()
         {
             base.Start();
-            modelComponent = Entity.Get<ModelComponent>();
-            vertices = ExtractVertices(modelComponent.Model);
-            modelComponent.Model = new();
-            material = Content.Load<Material>("Sphere Material");
-            SetModel(vertices);
-            /*AddHole(new Prism(new Vector3(2, 0, 0), Vector3.UnitX, .1f, 8));
-            AddHole(new Prism(new Vector3(1, -.5f, 0), Vector3.UnitX, .1f, 6));
-            AddHole(new Prism(new Vector3(1, 0, 1), new Vector3(-1, 0, -1), .1f, 3));
-            AddHole(new Prism(new Vector3(0, 2, 0), Vector3.UnitY, .1f, 8));
-            AddHole(new Prism(new Vector3(2, .5f, .5f), Vector3.UnitX, .1f, 8));*/
-        }
-        public override void Update()
-        {
-            if (aaa)
-                return;
-            aaa = true;
-            Delay();
-        }
-        private async void Delay()
-        {
-            await Task.Delay(1000);
-            AddHole(new Prism(new Vector3(2, 0, 0), Vector3.UnitX, .1f, 8));
-        }
-        private void SetModel(VertexPositionNormalTexture[] vertices)
-        {
-            modelComponent.Model = new();
-            modelComponent.Model.Meshes.Clear();
-            modelComponent.Model.Materials.Clear();
-            var vertexBuffer = Stride.Graphics.Buffer.Vertex.New(GraphicsDevice, vertices,
-                                                                 GraphicsResourceUsage.Dynamic);
-            int[] indices = new int[vertices.Length];
-            for (int i = 0; i < indices.Length; i++)
-                indices[i] = i;
-            var indexBuffer = Stride.Graphics.Buffer.Index.New(GraphicsDevice, indices);
-
-            var customMesh = new Mesh
-            {
-                Draw = new MeshDraw
-                {
-                    /* Vertex buffer and index buffer setup */
-                    PrimitiveType = PrimitiveType.TriangleList,
-                    DrawCount = indices.Length,
-                    IndexBuffer = new IndexBufferBinding(indexBuffer, true, indices.Length),
-                    VertexBuffers = [new VertexBufferBinding(vertexBuffer,
-                                  VertexPositionNormalTexture.Layout, vertexBuffer.ElementCount)],
-                }
-            };
-            customMesh.MaterialIndex = 0;
-            // add the mesh to the model
-            modelComponent.Model.Meshes.Add(customMesh);
-            this.vertices = vertices;
-            modelComponent.Model.Materials.Add(material);
-        }
-        //TODO: get the vertices back from the mesh
-        private VertexPositionNormalTexture[] ExtractVertices(Model model)
-        {
-            return Cube();
-        }
-        private static VertexPositionNormalTexture[] Cube()
-        {
-            List<VertexPositionNormalTexture> res = [];
-            var top = Face(new Vector3(-.5f, .5f, -.5f), Quaternion.Identity);
-            var bottom = Face(new Vector3(-.5f, .5f, -.5f), Quaternion.RotationAxis(new Vector3(1, 0, 0), (float)Math.PI));
-            res.AddRange(top);
-            res.AddRange(bottom);
-            var left = Face(new Vector3(-.5f, .5f, -.5f), Quaternion.RotationAxis(new Vector3(1, 0, 0), (float)Math.PI / 2));
-            var right = Face(new Vector3(-.5f, .5f, -.5f), Quaternion.RotationAxis(new Vector3(1, 0, 0), -(float)Math.PI / 2));
-            var front = Face(new Vector3(-.5f, .5f, -.5f), Quaternion.RotationAxis(new Vector3(0, 0, 1), (float)Math.PI / 2));
-            var rear = Face(new Vector3(-.5f, .5f, -.5f), Quaternion.RotationAxis(new Vector3(0, 0, 1), -(float)Math.PI / 2));
-            res.AddRange(left);
-            res.AddRange(right);
-            res.AddRange(front);
-            res.AddRange(rear);
-            return [.. res];
-        }
-        private static VertexPositionNormalTexture[] Face(Vector3 pos, Quaternion rot)
-        {
-            VertexPositionNormalTexture[] res = new VertexPositionNormalTexture[6];
-
-            res[0].Position = pos;
-            res[1].Position = pos + new Vector3(1, 0, 0);
-            res[2].Position = pos + new Vector3(1, 0, 1);
-            res[5].Position = pos;
-            res[4].Position = pos + new Vector3(0, 0, 1);
-            res[3].Position = pos + new Vector3(1, 0, 1);
-            for (int i = 0; i < 6; i++)
-            {
-                rot.Rotate(ref res[i].Position);
-                Vector3 normal = Vector3.UnitY;
-                rot.Rotate(ref normal);
-                res[i].Normal = normal;
-            }
-
-            return res;
-        }
-        public void AddHole(Prism hole)
-        {
-            VertexPositionNormalTexture[] res = HolePunch.PunchHole(vertices, hole);
-            for(int i = 0; i < res.Length; i++)
-            {
-                res[i].TextureCoordinate = new Vector2(.5f, .5f);
-            }
-            SetModel(res);
+            ModelComponent modelComponent = Entity.Get<ModelComponent>();
+            puncher = new(Game, modelComponent, InnerMaterial, LeafCapacity, AtomicSize);
         }
         public void AddHoleFromWorld(Vector3 pos, Vector3 dir, float radius)
         {
             dir.Normalize();
-            Entity.Transform.GetWorldTransformation(out Vector3 worldPos, out Quaternion rot, out _);
+            Entity.Transform.GetWorldTransformation(out Vector3 worldPos, out Quaternion rot, out Vector3 scale);
+            if (Math.Abs(scale.X - scale.Y) > 1e-6 || Math.Abs(scale.X - scale.Z) > 1e-6)
+                throw new UnpunchableMeshException("X Y and Z scales of model must be equal");
+            rot.Invert();
             rot.Rotate(ref dir);
             pos -= worldPos;
+            rot.Rotate(ref pos);
             pos -= dir * .1f;
+            pos /= scale.X;
             Prism hole = new(pos, -dir, radius, 6);
-            AddHole(hole);
+            puncher.AddHole(hole);
         }
     }
 }

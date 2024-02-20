@@ -1,0 +1,8 @@
+!Texture
+Id: 279d414a-c1fb-4fda-9997-67f286555295
+SerializedVersion: {Stride: 2.0.0.0}
+Tags: []
+Source: !file ../../../../../../Downloads/akm(3)/textures/material_normal.png
+Type: !ColorTextureType
+    ColorKeyColor: {R: 255, G: 0, B: 255, A: 255}
+    PremultiplyAlpha: false

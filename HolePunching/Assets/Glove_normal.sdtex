@@ -1,0 +1,8 @@
+!Texture
+Id: e6ee324d-344e-4e18-8c40-18c5d8655fdf
+SerializedVersion: {Stride: 2.0.0.0}
+Tags: []
+Source: !file ../../../../../../Downloads/black_leather_glove/textures/Glove_normal.png
+Type: !ColorTextureType
+    ColorKeyColor: {R: 255, G: 0, B: 255, A: 255}
+    PremultiplyAlpha: false

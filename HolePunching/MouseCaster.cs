@@ -9,6 +9,7 @@ using Stride.Core.Mathematics;
 using Stride.Input;
 using HolePuncher;
 using FFmpeg.AutoGen;
+using BulletSharp.SoftBody;
 
 namespace HolePunching
 {
@@ -16,10 +17,13 @@ namespace HolePunching
     {
         public CameraComponent Camera { get; set; }
         private ModelComponent model;
+        private Queue<(Punchable, Vector3, Vector3, float)> punchQueue;
+        private bool queueLocked;
         public override void Start()
         {
             base.Start();
             model = Entity.Get<ModelComponent>();
+            punchQueue = new();
         }
         public override void Update()
         {
@@ -36,7 +40,8 @@ namespace HolePunching
             var enumerator = punchables.GetEnumerator();
             enumerator.MoveNext();
             Punchable punchable = enumerator.Current;
-            Task.Run(() => punchable.AddHoleFromWorld(res.Point, dir, .1f));
+            punchable.AddHoleFromWorld(res.Point, dir, .1f);
+            //punchQueue.Enqueue((punchable, res.Point, dir, .02f));
         }
         public static (HitResult,Vector3) ScreenPositionToWorldPositionRaycast(Vector2 screenPos, CameraComponent camera, Simulation simulation)
         {

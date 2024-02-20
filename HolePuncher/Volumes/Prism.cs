@@ -3,30 +3,37 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using HolePuncher.Volumes.Faces;
 using NetTopologySuite.Geometries;
 using Stride.Core.Mathematics;
+using Stride.Rendering;
+using Plane = HolePuncher.Volumes.Faces.Plane;
 
-namespace HolePuncher
+namespace HolePuncher.Volumes
 {
-    public class Prism(Vector3 start, Vector3 normal, float radius, int numSides)
+    public class Prism (Vector3 start, Vector3 normal, float radius, int numSides) : IVolume
     {
         public Plane facePlane = new(start, normal);
         public float radius = radius;
+        public int numSides = numSides;
         public Polygon face = GeometryHelper.InscribeCircle(radius, numSides);
-        public Polygon smallFace = GeometryHelper.InscribeCircle(radius - 1e-3f, numSides);
+        public BoundingBox3D BoundingBox { get; set; } = new BoundingBox3D([new Vector3(-1e12f, -1e12f, -1e12f), new Vector3(1e12f, 1e12f, 1e12f)]);
+        public Geometry Slice(Plane plane)
+        {
+            throw new Exception("Interest area must be provided to take slice of prism with unlimited height.");
+        }
+        public Prism ToMeshSpace(Mesh mesh, Skeleton skeleton)
+        {
+            Vector3 newStart = mesh.PointToMeshSpace(skeleton, facePlane.origin);
+            Vector3 newNormal = mesh.DirToMeshSpace(skeleton, normal);
+            float newRadius = mesh.ScaleToMeshSpace(skeleton, radius);
+            return new Prism(newStart, newNormal, newRadius, numSides);
+        }
         //Get the slice of the prism with respect to provided plane, may be limited to area around provided triangle.
-        public Polygon Slice(Plane plane, Polygon triangle)
-        {
-            return TakeSlice(face, plane, triangle);
-        }
-        public Polygon SmallSlice(Plane plane, Polygon triangle)
-        {
-            return TakeSlice(smallFace, plane, triangle);
-        }
-        private Polygon TakeSlice(Polygon face, Plane plane, Polygon triangle)
+        public Geometry Slice(Plane plane, Geometry interestArea)
         {
             if (IsParallel(plane))
-                return ParallelSlice(plane, triangle);
+                return ParallelSlice(plane, interestArea);
             Coordinate[] sliceCoords = new Coordinate[face.Coordinates.Length];
             for (int i = 0; i < face.Coordinates.Length - 1; i++)
             {
@@ -38,11 +45,11 @@ namespace HolePuncher
         }
         public bool IsParallel(Plane plane)
         {
-            return Math.Abs(Vector3.Dot(facePlane.normal, plane.normal)) <= Plane.O;
+            return Math.Abs(Vector3.Dot(facePlane.normal, plane.normal)) <= 1e-4;
         }
         //Slice of prism for plane parallel to prism. null if no intersect.
         //Only area around triangle
-        private Polygon ParallelSlice(Plane plane, Polygon triangle)
+        private Polygon ParallelSlice(Plane plane, Geometry interestArea)
         {
             //rectangle of width infinity, height is height of line intersecting facePolygon at the adjusted coords of the plane origin
             LineString line = FacePlaneIntersectionPerp(plane);
@@ -58,9 +65,9 @@ namespace HolePuncher
             widthLineDir.Normalize();
             //Get min length of prism slice that would yield area around triangle
             float maxDist = .001f, minDist = -.001f;
-            for (int i = 0; i < triangle.Coordinates.Length - 1; i++)
+            for (int i = 0; i < interestArea.Envelope.Coordinates.Length - 1; i++)
             {
-                Vector2 v = GeometryHelper.CoordToVec(triangle.Coordinates[i]);
+                Vector2 v = GeometryHelper.CoordToVec(interestArea.Envelope.Coordinates[i]);
                 float d1 = Vector2.Dot(v - p0, widthLineDir);
                 float d2 = Vector2.Dot(v - p1, widthLineDir);
                 if (d1 > maxDist)
@@ -88,11 +95,11 @@ namespace HolePuncher
         {
             Vector3 intersection = facePlane.ToWorldSpace(facePlane.LineIntersect(plane.origin, facePlane.normal));
             Vector3 up = Vector3.Cross(facePlane.normal, plane.normal);
-            Vector3 c0 = (Vector3.Dot(facePlane.origin - intersection, up) / Vector3.Dot(up, up)) * up + intersection;
-            Vector2 c1 = facePlane.ToPlaneSpace(c0 + up * (radius+10f));
-            Vector2 c2 = facePlane.ToPlaneSpace(c0 - up * (radius+10f));
+            Vector3 c0 = Vector3.Dot(facePlane.origin - intersection, up) / Vector3.Dot(up, up) * up + intersection;
+            Vector2 c1 = facePlane.ToPlaneSpace(c0 + up * (radius + 10f));
+            Vector2 c2 = facePlane.ToPlaneSpace(c0 - up * (radius + 10f));
             return GeometryHelper.CreateLineSegment(c1, c2);
         }
     }
-    
+
 }
